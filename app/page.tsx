@@ -779,7 +779,7 @@ export default function Home() {
       </p>
 
       <p className="mt-5 text-slate-400">
-        sales@procupsinternational.com
+        support@smartpacktrading.co.za
       </p>
 
     </div>
@@ -791,6 +791,10 @@ export default function Home() {
     © {new Date().getFullYear()} Pro Cups International.
     All Rights Reserved.
 
+  </div>
+
+  <div className="py-6 text-center text-slate-500">
+  Pro Cups International is a division of Smart Pack Trading (Pty) Ltd. 
   </div>
 
 </footer>

@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/footer";
 
 export default function LoginPage() {
   const supabase = createClient();
@@ -36,76 +38,135 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
+    <>
+      <Navbar />
 
-      <div className="w-full max-w-md rounded-3xl bg-white shadow-xl p-10">
+      <main className="min-h-screen bg-slate-50">
 
-        <h1 className="text-4xl font-black text-center">
-          Welcome Back
-        </h1>
+        <section className="bg-slate-900 py-16 text-white lg:py-24">
 
-        <p className="text-center text-gray-500 mt-2 mb-8">
-          Sign in to your Pro Cups account
-        </p>
+          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12">
 
-        <form
-          onSubmit={signIn}
-          className="space-y-5"
-        >
+            <span className="inline-block rounded-full bg-green-700/20 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-300">
+              Customer Portal
+            </span>
 
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e)=>setEmail(e.target.value)}
-            className="w-full rounded-xl border p-4"
-            required
-          />
+            <h1 className="mt-6 text-4xl font-black sm:text-5xl lg:text-6xl">
+              Welcome Back
+            </h1>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e)=>setPassword(e.target.value)}
-            className="w-full rounded-xl border p-4"
-            required
-          />
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+              Sign in to access your Pro Cups account, manage quote
+              requests and track your orders.
+            </p>
 
-          {error && (
-            <div className="rounded-xl bg-red-100 p-4 text-red-600">
-              {error}
+          </div>
+
+        </section>
+
+        <section className="py-16 lg:py-24">
+
+          <div className="mx-auto max-w-md px-5 sm:px-6">
+
+            <div className="rounded-[32px] bg-white p-8 shadow-xl lg:p-10">
+
+              <h2 className="text-center text-3xl font-black text-black">
+                Login
+              </h2>
+
+              <p className="mt-3 text-center text-slate-600">
+                Enter your email address and password below.
+              </p>
+
+              <form
+                onSubmit={signIn}
+                className="mt-10 space-y-6"
+              >
+
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
+                  required
+                />
+
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
+                  required
+                />
+                                {error && (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full rounded-full bg-green-700 py-4 text-lg font-bold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loading ? "Signing In..." : "Sign In"}
+                </button>
+
+              </form>
+
+              <div className="mt-8 flex flex-col gap-4 text-center">
+
+                <Link
+                  href="/forgot-password"
+                  className="font-medium text-green-700 transition hover:text-green-800"
+                >
+                  Forgot your password?
+                </Link>
+
+                <div className="text-slate-600">
+                  Don't have an account?{" "}
+                  <Link
+                    href="/signup"
+                    className="font-bold text-green-700 hover:text-green-800"
+                  >
+                    Create Account
+                  </Link>
+                </div>
+
+              </div>
+
             </div>
-          )}
 
-          <button
-            disabled={loading}
-            className="w-full rounded-xl bg-green-600 py-4 font-bold text-white hover:bg-green-700 transition"
-          >
-            {loading ? "Signing In..." : "Login"}
-          </button>
+            <div className="mt-8 rounded-[28px] bg-white p-6 shadow-lg">
 
-        </form>
+              <h3 className="text-xl font-black text-black">
+                Why create an account?
+              </h3>
 
-        <div className="mt-6 flex justify-between text-sm">
+              <ul className="mt-5 space-y-3 text-slate-700">
 
-          <Link
-            href="/forgot-password"
-            className="text-green-700"
-          >
-            Forgot Password?
-          </Link>
+                <li>✓ View your quote requests</li>
 
-          <Link
-            href="/signup"
-            className="text-green-700"
-          >
-            Create Account
-          </Link>
+                <li>✓ Track quote progress</li>
 
-        </div>
+                <li>✓ Manage artwork uploads</li>
 
-      </div>
+                <li>✓ Faster future orders</li>
 
-    </main>
+              </ul>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        <Footer />
+
+      </main>
+
+    </>
   );
 }
