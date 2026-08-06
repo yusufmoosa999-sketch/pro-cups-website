@@ -1,6 +1,13 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contact Us",
+  description:
+    "Contact Pro Cups International for paper cup quotations, custom printing and product enquiries.",
+};
 
 export default function ContactPage() {
   return (

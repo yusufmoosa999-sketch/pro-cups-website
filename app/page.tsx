@@ -3,6 +3,14 @@ import FadeIn from "@/components/FadeIn";
 
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
+
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Premium Paper Cup Manufacturer South Africa",
+  description:
+    "Pro Cups International manufactures premium ripple cups, double wall cups, single wall cups and custom printed paper cups in South Africa.",
+};
 const products = [
   {
     name: "Kraft Vertical Ripple",

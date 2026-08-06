@@ -2,7 +2,13 @@ import Footer from "@/components/footer";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
+import type { Metadata } from "next";
 
+export const metadata: Metadata = {
+  title: "Kraft Vertical Ripple Cups",
+  description:
+    "Premium kraft vertical ripple paper cups manufactured in South Africa. Available in 250ml and 350ml with custom branding.",
+};
 export default function KraftVerticalRipple() {
   return (
     <>

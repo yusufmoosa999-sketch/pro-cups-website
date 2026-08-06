@@ -3,6 +3,13 @@ import Footer from "@/components/footer";
 import Image from "next/image";
 import ArtworkUpload from "@/components/ArtworkUpload";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Custom Printed Paper Cups",
+  description:
+    "Custom printed paper cups from only 1000 units. Manufactured in South Africa with premium food-grade materials.",
+};
 
 export default function CustomPrinting() {
   return (

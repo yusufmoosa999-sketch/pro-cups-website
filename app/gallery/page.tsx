@@ -1,6 +1,13 @@
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Gallery",
+  description:
+    "View examples of our premium paper cups and custom printed paper cup projects.",
+};
 
 const gallery = [
   "/images/gallery/gallery1.jpg",

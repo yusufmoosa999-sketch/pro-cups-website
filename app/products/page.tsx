@@ -2,6 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Paper Cups",
+  description:
+    "Browse our range of premium ripple cups, double wall cups and custom printed paper cups manufactured in South Africa.",
+};
 
 const products = [
   {
