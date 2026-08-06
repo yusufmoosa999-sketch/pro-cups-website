@@ -1,16 +1,35 @@
 "use client";
 
+
 import { useState } from "react";
 
 export default function ArtworkUpload() {
   const [preview, setPreview] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
 
+  const [file, setFile] = useState<File | null>(null);
+  const [artworkPath, setArtworkPath] = useState("");
+
+const [companyName, setCompanyName] = useState("");
+const [contactName, setContactName] = useState("");
+const [email, setEmail] = useState("");
+const [phone, setPhone] = useState("");
+const [product, setProduct] = useState("");
+const [quantity, setQuantity] = useState("");
+const [message, setMessage] = useState("");
+
+const [loading, setLoading] = useState(false);
+const [success, setSuccess] = useState(false);
+
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+
+    
     if (!file) return;
 
     setFileName(file.name);
+
+    setFile(file);
 
     if (file.type.startsWith("image/")) {
       setPreview(URL.createObjectURL(file));
@@ -18,7 +37,78 @@ export default function ArtworkUpload() {
       setPreview(null);
     }
   }
+async function submitQuote() {
+  try {
+    setLoading(true);
+    setSuccess(false);
 
+    let uploadedPath = "";
+
+if (file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const uploadResponse = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  const uploadResult = await uploadResponse.json();
+  const artworkUrl = uploadResult.publicUrl;
+
+  if (!uploadResponse.ok) {
+    alert(uploadResult.error);
+    setLoading(false);
+    return;
+  }
+
+  uploadedPath = uploadResult.publicUrl;
+}
+
+    const response = await fetch("/api/quotes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        company_name: companyName,
+        contact_name: contactName,
+        email,
+        phone,
+        product,
+        quantity: Number(quantity),
+        message,
+        artwork_url: uploadedPath,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      alert(result.error || "Something went wrong.");
+      return;
+    }
+
+    setSuccess(true);
+
+    setCompanyName("");
+    setContactName("");
+    setEmail("");
+    setPhone("");
+    setProduct("");
+    setQuantity("");
+    setMessage("");
+    setFileName("");
+    setPreview(null);
+    setFile(null);
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to submit quote.");
+  } finally {
+    setLoading(false);
+  }
+}
   return (
     <section className="max-w-7xl mx-auto px-8 py-24">
 
@@ -94,34 +184,41 @@ export default function ArtworkUpload() {
           <div className="space-y-6">
 
             <input
-              placeholder="Company Name"
-              className="w-full rounded-2xl p-5 text-xl text-black"
-            />
+  value={companyName}
+  onChange={(e) => setCompanyName(e.target.value)}
+  placeholder="Company Name"
+  className="w-full rounded-2xl p-5 text-xl text-black"
+/>
 
             <input
-              placeholder="Your Name"
-              className="w-full rounded-2xl p-5 text-xl text-black"
-            />
+  value={contactName}
+  onChange={(e) => setContactName(e.target.value)}
+  placeholder="Your Name"
+  className="w-full rounded-2xl p-5 text-xl text-black"
+/>
 
             <input
-              placeholder="Email Address"
-              className="w-full rounded-2xl p-5 text-xl text-black"
-            />
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  placeholder="Email Address"
+  className="w-full rounded-2xl p-5 text-xl text-black"
+/>
 
             <input
-              placeholder="Phone Number"
-              className="w-full rounded-2xl p-5 text-xl text-black"
-            />
+  value={phone}
+  onChange={(e) => setPhone(e.target.value)}
+  placeholder="Phone Number"
+  className="w-full rounded-2xl p-5 text-xl text-black"
+/>
+<select
+  value={product}
+  onChange={(e) => setProduct(e.target.value)}
+  className="w-full rounded-2xl p-5 text-xl text-black"
+>
 
-            <select className="w-full rounded-2xl p-5 text-xl text-black">
+              <option value="">Select Cup</option>
 
-              <option>Select Cup</option>
-
-              <option>Kraft Vertical Ripple</option>
-
-              <option>Black Vertical Ripple</option>
-
-              <option>Coffee Bean Vertical Ripple</option>
+             
 
               <option>Kraft Double Wall</option>
 
@@ -130,20 +227,34 @@ export default function ArtworkUpload() {
             </select>
 
             <input
-              placeholder="Quantity Required"
-              className="w-full rounded-2xl p-5 text-xl text-black"
-            />
+  value={quantity}
+  onChange={(e) => setQuantity(e.target.value)}
+  placeholder="Quantity Required"
+  className="w-full rounded-2xl p-5 text-xl text-black"
+/>
+            
 
             <textarea
-              rows={5}
-              placeholder="Tell us about your project..."
-              className="w-full rounded-2xl p-5 text-xl text-black"
-            />
+  rows={5}
+  value={message}
+  onChange={(e) => setMessage(e.target.value)}
+  placeholder="Tell us about your project..."
+  className="w-full rounded-2xl p-5 text-xl text-black"
+/>
 
-            <button className="w-full rounded-full bg-green-600 py-5 text-2xl font-bold hover:bg-green-700 transition">
-              Submit Quote Request
-            </button>
+            <button
+  onClick={submitQuote}
+  disabled={loading}
+  className="w-full rounded-full bg-green-600 py-5 text-2xl font-bold hover:bg-green-700 transition disabled:opacity-50"
+>
+  {loading ? "Submitting..." : "Submit Quote Request"}
+</button>
 
+{success && (
+  <p className="mt-6 rounded-xl bg-green-100 p-4 text-center text-lg font-semibold text-green-700">
+    ✅ Your quote request has been submitted successfully. We'll be in touch soon.
+  </p>
+)}
           </div>
 
         </div>

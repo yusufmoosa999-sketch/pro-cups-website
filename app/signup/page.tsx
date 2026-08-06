@@ -5,25 +5,34 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const supabase = createClient();
   const router = useRouter();
 
+  const [companyName, setCompanyName] = useState("");
+  const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function signIn(e: React.FormEvent) {
+  async function signUp(e: React.FormEvent) {
     e.preventDefault();
 
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          company_name: companyName,
+          contact_name: contactName,
+          role: "customer",
+        },
+      },
     });
 
     if (error) {
@@ -32,32 +41,49 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    alert("Account created successfully! Please check your email.");
+
+    router.push("/login");
   }
 
   return (
     <main className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
 
-      <div className="w-full max-w-md rounded-3xl bg-white shadow-xl p-10">
+      <div className="w-full max-w-lg rounded-3xl bg-white shadow-xl p-10">
 
         <h1 className="text-4xl font-black text-center">
-          Welcome Back
+          Create Account
         </h1>
 
         <p className="text-center text-gray-500 mt-2 mb-8">
-          Sign in to your Pro Cups account
+          Create your Pro Cups customer account
         </p>
 
         <form
-          onSubmit={signIn}
+          onSubmit={signUp}
           className="space-y-5"
         >
+          <input
+            placeholder="Company Name"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            className="w-full rounded-xl border p-4"
+            required
+          />
+
+          <input
+            placeholder="Contact Name"
+            value={contactName}
+            onChange={(e) => setContactName(e.target.value)}
+            className="w-full rounded-xl border p-4"
+            required
+          />
 
           <input
             type="email"
             placeholder="Email Address"
             value={email}
-            onChange={(e)=>setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-xl border p-4"
             required
           />
@@ -66,7 +92,7 @@ export default function LoginPage() {
             type="password"
             placeholder="Password"
             value={password}
-            onChange={(e)=>setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-xl border p-4"
             required
           />
@@ -81,27 +107,17 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-xl bg-green-600 py-4 font-bold text-white hover:bg-green-700 transition"
           >
-            {loading ? "Signing In..." : "Login"}
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
-
         </form>
 
-        <div className="mt-6 flex justify-between text-sm">
-
+        <div className="mt-6 text-center">
           <Link
-            href="/forgot-password"
+            href="/login"
             className="text-green-700"
           >
-            Forgot Password?
+            Already have an account? Login
           </Link>
-
-          <Link
-            href="/signup"
-            className="text-green-700"
-          >
-            Create Account
-          </Link>
-
         </div>
 
       </div>
