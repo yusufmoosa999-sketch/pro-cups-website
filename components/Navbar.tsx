@@ -21,29 +21,50 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
 
-        <div className="hidden lg:flex items-center gap-8 font-medium">
+        <div className="hidden lg:flex items-center gap-8 font-semibold">
 
-          <Link href="/">Home</Link>
+  <Link
+    href="/"
+    className="text-black transition hover:text-green-700"
+  >
+    Home
+  </Link>
 
-          <Link href="/products">Products</Link>
+  <Link
+    href="/products"
+    className="text-black transition hover:text-green-700"
+  >
+    Products
+  </Link>
 
-          <Link href="/gallery">Gallery</Link>
+  <Link
+    href="/gallery"
+    className="text-black transition hover:text-green-700"
+  >
+    Gallery
+  </Link>
 
-          <Link href="/contact">Contact</Link>
+  <Link
+    href="/contact"
+    className="text-black transition hover:text-green-700"
+  >
+    Contact
+  </Link>
 
-          <Link
-            href="/login"
-            className="rounded-full border border-green-700 px-6 py-3"
-          >
-            Login
-          </Link>
+  <Link
+    href="/login"
+    className="rounded-full border-2 border-slate-800 px-6 py-3 font-semibold text-slate-800 transition hover:bg-green-700 hover:border-green-700 hover:text-white"
+  >
+    Login
+  </Link>
 
-          <Link
-            href="/custom-printing"
-            className="rounded-full bg-green-700 px-6 py-3 text-white"
-          >
-            Get Quote
-          </Link>
+  <Link
+    href="/custom-printing"
+    className="rounded-full bg-green-700 px-6 py-3 font-semibold text-white transition hover:bg-green-800"
+  >
+    Get Quote
+  </Link>
+
 
         </div>
 
@@ -60,43 +81,67 @@ export default function Navbar() {
 
       {open && (
 
-        <div className="border-t bg-white lg:hidden">
+  <div className="border-t border-slate-200 bg-white shadow-lg lg:hidden">
 
-          <div className="flex flex-col px-6 py-5 gap-5">
+    <div className="flex flex-col gap-2 px-6 py-6">
 
-            <Link href="/" onClick={() => setOpen(false)}>
-              Home
-            </Link>
+      <Link
+        href="/"
+        onClick={() => setOpen(false)}
+        className="rounded-xl px-4 py-4 text-lg font-semibold text-black transition hover:bg-green-50 hover:text-green-700"
+      >
+        Home
+      </Link>
 
-            <Link href="/products" onClick={() => setOpen(false)}>
-              Products
-            </Link>
+      <Link
+        href="/products"
+        onClick={() => setOpen(false)}
+        className="rounded-xl px-4 py-4 text-lg font-semibold text-black transition hover:bg-green-50 hover:text-green-700"
+      >
+        Products
+      </Link>
 
-            <Link href="/gallery" onClick={() => setOpen(false)}>
-              Gallery
-            </Link>
+      <Link
+        href="/gallery"
+        onClick={() => setOpen(false)}
+        className="rounded-xl px-4 py-4 text-lg font-semibold text-black transition hover:bg-green-50 hover:text-green-700"
+      >
+        Gallery
+      </Link>
 
-            <Link href="/contact" onClick={() => setOpen(false)}>
-              Contact
-            </Link>
+      <Link
+        href="/contact"
+        onClick={() => setOpen(false)}
+        className="rounded-xl px-4 py-4 text-lg font-semibold text-black transition hover:bg-green-50 hover:text-green-700"
+      >
+        Contact
+      </Link>
 
-            <Link href="/login" onClick={() => setOpen(false)}>
-              Login
-            </Link>
+      <div className="mt-4 flex flex-col gap-3">
 
-            <Link
-              href="/custom-printing"
-              onClick={() => setOpen(false)}
-              className="rounded-full bg-green-700 py-3 text-center text-white"
-            >
-              Get Quote
-            </Link>
+        <Link
+          href="/login"
+          onClick={() => setOpen(false)}
+          className="rounded-full border-2 border-slate-800 py-4 text-center text-lg font-semibold text-slate-800 transition hover:bg-green-700 hover:border-green-700 hover:text-white"
+        >
+          Login
+        </Link>
 
-          </div>
+        <Link
+          href="/custom-printing"
+          onClick={() => setOpen(false)}
+          className="rounded-full bg-green-700 py-4 text-center text-lg font-semibold text-white transition hover:bg-green-800"
+        >
+          Get Quote
+        </Link>
 
-        </div>
+      </div>
 
-      )}
+    </div>
+
+  </div>
+
+)}
     </nav>
   );
 }

@@ -1,24 +1,275 @@
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
+
 export default function ContactPage() {
   return (
     <>
       <Navbar />
+
       <main className="min-h-screen bg-white">
 
-        <section className="max-w-7xl mx-auto px-8 py-24">
+        {/* HERO */}
 
-          <p className="uppercase tracking-[6px] text-green-700 font-semibold">
-            Contact Us
-          </p>
+        <section className="bg-slate-900 text-white">
 
-          <h1 className="text-6xl font-black mt-4">
-            Let's Talk
-          </h1>
+          <div className="mx-auto max-w-7xl px-5 py-16 sm:px-6 lg:px-12 lg:py-24">
+
+            <span className="inline-block rounded-full bg-green-700/20 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-300">
+              Contact Us
+            </span>
+
+            <h1 className="mt-6 text-4xl font-black leading-tight sm:text-5xl lg:text-7xl">
+              Let's
+              <span className="text-green-400">
+                {" "}Talk.
+              </span>
+            </h1>
+
+            <p className="mt-8 max-w-3xl text-lg leading-8 text-slate-300">
+              We'd love to hear from you. Whether you need a quotation,
+              custom printed cups or have a question about our products,
+              our team is here to help.
+            </p>
+
+          </div>
 
         </section>
-<Footer />
+
+        {/* CONTACT CARDS */}
+
+        <section className="py-16 lg:py-24">
+
+          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12">
+
+            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
+
+              <div className="rounded-[30px] bg-white p-8 shadow-lg">
+
+                <div className="text-5xl">
+                  📞
+                </div>
+
+                <h2 className="mt-6 text-2xl font-black text-black">
+                  Call Us
+                </h2>
+
+                <p className="mt-4 text-slate-700">
+                  Speak directly to our sales team.
+                </p>
+
+                <Link
+                  href="tel:+27310000000"
+                  className="mt-8 block rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
+                >
+                  Call Now
+                </Link>
+
+              </div>
+
+              <div className="rounded-[30px] bg-white p-8 shadow-lg">
+
+                <div className="text-5xl">
+                  💬
+                </div>
+
+                <h2 className="mt-6 text-2xl font-black text-black">
+                  WhatsApp
+                </h2>
+
+                <p className="mt-4 text-slate-700">
+                  Chat with our sales team instantly.
+                </p>
+
+                <Link
+                  href="https://wa.me/27XXXXXXXXX"
+                  className="mt-8 block rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
+                >
+                  Start Chat
+                </Link>
+
+              </div>
+
+              <div className="rounded-[30px] bg-white p-8 shadow-lg">
+
+                <div className="text-5xl">
+                  ✉️
+                </div>
+
+                <h2 className="mt-6 text-2xl font-black text-black">
+                  Email
+                </h2>
+
+                <p className="mt-4 text-slate-700">
+                  Send us your enquiry anytime.
+                </p>
+
+                <Link
+                  href="mailto:sales@procupsinternational.com"
+                  className="mt-8 block rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
+                >
+                  Send Email
+                </Link>
+
+              </div>
+
+              <div className="rounded-[30px] bg-white p-8 shadow-lg">
+
+                <div className="text-5xl">
+                  📍
+                </div>
+
+                <h2 className="mt-6 text-2xl font-black text-black">
+                  Location
+                </h2>
+
+                <p className="mt-4 text-slate-700">
+                  Durban,
+                  <br />
+                  South Africa
+                </p>
+
+                <button className="mt-8 w-full rounded-full border-2 border-green-700 py-4 font-bold text-green-700 transition hover:bg-green-700 hover:text-white">
+                  View Map
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+                {/* CONTACT FORM */}
+
+        <section className="bg-slate-50 py-16 lg:py-24">
+
+          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12">
+
+            <div className="grid gap-12 lg:grid-cols-2">
+
+              {/* FORM */}
+
+              <div className="rounded-[32px] bg-white p-8 shadow-xl lg:p-10">
+
+                <span className="inline-block rounded-full bg-green-100 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-700">
+                  Send an Enquiry
+                </span>
+
+                <h2 className="mt-6 text-3xl font-black text-black">
+                  Request a Quote
+                </h2>
+
+                <p className="mt-4 text-slate-700">
+                  Complete the form below and one of our team members
+                  will get back to you as soon as possible.
+                </p>
+
+                <form className="mt-10 space-y-6">
+
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
+                  />
+
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
+                  />
+
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
+                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
+                  />
+
+                  <textarea
+                    rows={6}
+                    placeholder="Tell us what you need..."
+                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
+                  />
+
+                  <button
+                    type="submit"
+                    className="w-full rounded-full bg-green-700 py-4 text-lg font-bold text-white transition hover:bg-green-800"
+                  >
+                    Send Enquiry
+                  </button>
+
+                </form>
+
+              </div>
+
+              {/* MAP */}
+
+              <div className="rounded-[32px] overflow-hidden shadow-xl">
+
+                <iframe
+                  src="https://www.google.com/maps?q=Durban,South%20Africa&output=embed"
+                  className="h-[500px] w-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* CTA */}
+
+        <section className="bg-slate-900 py-20 text-white">
+
+          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12 text-center">
+
+            <span className="inline-block rounded-full bg-green-700/20 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-300">
+              Pro Cups International
+            </span>
+
+            <h2 className="mt-6 text-4xl font-black sm:text-5xl">
+              Ready To Order Premium
+              <span className="text-green-400">
+                {" "}Paper Cups?
+              </span>
+            </h2>
+
+            <p className="mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-300">
+              We manufacture premium paper cups for coffee shops,
+              restaurants, franchises and wholesalers throughout South
+              Africa.
+            </p>
+
+            <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
+
+              <Link
+                href="/custom-printing"
+                className="rounded-full bg-green-700 px-8 py-4 font-bold text-white transition hover:bg-green-800"
+              >
+                Request Quote
+              </Link>
+
+              <Link
+                href="/products"
+                className="rounded-full border border-white/20 px-8 py-4 font-bold transition hover:bg-white hover:text-black"
+              >
+                View Products
+              </Link>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        <Footer />
+
       </main>
+
     </>
   );
 }
