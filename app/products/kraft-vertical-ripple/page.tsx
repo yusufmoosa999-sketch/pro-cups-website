@@ -140,7 +140,9 @@ export default function KraftVerticalRipple() {
         </section>
 
         <section className="mx-auto max-w-7xl px-5 py-16 sm:px-6 lg:px-12"></section>
-    Product Specifications
+    <h2 className="mb-10 text-center text-3xl font-black text-black sm:text-4xl">
+  Product Specifications
+</h2>
           {/* SPECIFICATIONS */}
 
         <section className="py-20">
