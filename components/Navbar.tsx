@@ -1,69 +1,102 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
 export default function Navbar() {
+  const [open, setOpen] = useState(false);
+
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-200">
+    <nav className="sticky top-0 z-50 bg-white shadow">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
 
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-8 py-5">
+        {/* Logo */}
 
-        <Link
-          href="/"
-          className="text-3xl font-black tracking-tight"
-        >
+        <Link href="/" className="text-3xl font-black leading-none">
           <span className="text-black">Pro</span>
-          <span className="text-green-700"> Cups</span>
+          <br />
+          <span className="text-green-700">Cups</span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-10 font-semibold text-gray-800">
+        {/* Desktop Menu */}
 
-          <Link href="/" className="hover:text-green-700 transition">
-            Home
-          </Link>
+        <div className="hidden lg:flex items-center gap-8 font-medium">
 
-          <Link href="/products" className="hover:text-green-700 transition">
-            Products
-          </Link>
+          <Link href="/">Home</Link>
 
-          <Link href="/custom-printing" className="hover:text-green-700 transition">
-            Custom Printing
-          </Link>
+          <Link href="/products">Products</Link>
 
-          <Link href="/gallery" className="hover:text-green-700 transition">
-            Gallery
-          </Link>
+          <Link href="/gallery">Gallery</Link>
 
-          <Link href="/about" className="hover:text-green-700 transition">
-            About
-          </Link>
-
-          <Link href="/contact" className="hover:text-green-700 transition">
-            Contact
-          </Link>
-
-        </nav>
-
-        <div className="flex gap-4">
+          <Link href="/contact">Contact</Link>
 
           <Link
             href="/login"
-            className="px-6 py-3 rounded-full border border-gray-300 hover:bg-gray-100 transition"
+            className="rounded-full border border-green-700 px-6 py-3"
           >
             Login
           </Link>
 
           <Link
-            href="/contact"
-            className="px-6 py-3 rounded-full bg-green-700 hover:bg-green-800 text-white transition"
+            href="/custom-printing"
+            className="rounded-full bg-green-700 px-6 py-3 text-white"
           >
             Get Quote
           </Link>
 
         </div>
 
+        {/* Mobile Button */}
+
+        <button
+          onClick={() => setOpen(!open)}
+          className="lg:hidden"
+        >
+          {open ? <X size={34} /> : <Menu size={34} />}
+        </button>
+
       </div>
 
-    </header>
+      {open && (
+
+        <div className="border-t bg-white lg:hidden">
+
+          <div className="flex flex-col px-6 py-5 gap-5">
+
+            <Link href="/" onClick={() => setOpen(false)}>
+              Home
+            </Link>
+
+            <Link href="/products" onClick={() => setOpen(false)}>
+              Products
+            </Link>
+
+            <Link href="/gallery" onClick={() => setOpen(false)}>
+              Gallery
+            </Link>
+
+            <Link href="/contact" onClick={() => setOpen(false)}>
+              Contact
+            </Link>
+
+            <Link href="/login" onClick={() => setOpen(false)}>
+              Login
+            </Link>
+
+            <Link
+              href="/custom-printing"
+              onClick={() => setOpen(false)}
+              className="rounded-full bg-green-700 py-3 text-center text-white"
+            >
+              Get Quote
+            </Link>
+
+          </div>
+
+        </div>
+
+      )}
+    </nav>
   );
 }
