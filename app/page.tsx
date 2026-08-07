@@ -4,7 +4,9 @@ import FadeIn from "@/components/FadeIn";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 
+
 import type { Metadata } from "next";
+
 
 export const metadata: Metadata = {
   title: "Premium Paper Cup Manufacturer South Africa",
@@ -580,7 +582,75 @@ export default function Home() {
   </div>
 
 </section>
+{/* FAQ */}
 
+<section className="bg-slate-50 py-20 lg:py-28">
+
+  <div className="mx-auto max-w-5xl px-6 lg:px-12">
+
+    <div className="text-center">
+
+      <span className="inline-block rounded-full bg-green-100 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-700">
+        Frequently Asked Questions
+      </span>
+
+      <h2 className="mt-6 text-4xl font-black text-black sm:text-5xl">
+        Paper Cup FAQs
+      </h2>
+
+      <p className="mt-6 text-lg text-slate-700">
+        Answers to some of the most common questions about our paper cups and custom printing services.
+      </p>
+
+    </div>
+
+    <div className="mt-14 space-y-6">
+
+      <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+        <h3 className="text-2xl font-bold text-black">
+          What is the minimum order quantity?
+        </h3>
+
+        <p className="mt-4 text-slate-700 leading-8">
+          Our minimum order quantity is just 1,000 paper cups, making custom printed cups affordable for both small businesses and large national brands.
+        </p>
+      </div>
+
+      <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+        <h3 className="text-2xl font-bold text-black">
+          Do you manufacture paper cups in South Africa?
+        </h3>
+
+        <p className="mt-4 text-slate-700 leading-8">
+          Yes. Pro Cups International manufactures premium paper cups locally in South Africa, allowing for reliable lead times and consistent quality.
+        </p>
+      </div>
+
+      <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+        <h3 className="text-2xl font-bold text-black">
+          Can I print my own logo on the cups?
+        </h3>
+
+        <p className="mt-4 text-slate-700 leading-8">
+          Absolutely. We specialise in high-quality custom printed paper cups for coffee shops, restaurants, franchises and corporate businesses.
+        </p>
+      </div>
+
+      <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+        <h3 className="text-2xl font-bold text-black">
+          Which cup sizes are available?
+        </h3>
+
+        <p className="mt-4 text-slate-700 leading-8">
+          We currently manufacture 250ml and 350ml paper cups in a variety of styles including ripple, double wall and custom printed options.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
 {/* FINAL CTA */}
 
 <section className="relative overflow-hidden bg-slate-900 py-24 text-white">
