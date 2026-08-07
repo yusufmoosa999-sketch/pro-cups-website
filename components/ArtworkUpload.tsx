@@ -144,7 +144,7 @@ export default function ArtworkUpload() {
   <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-green-600/5 blur-[140px]" />
           <label
   htmlFor="artwork-upload"
-  className="group flex h-[320px] md:h-[420px] lg:h-[500px] w-full cursor-pointer flex-col items-center justify-center rounded-[36px] border-2 border-dashed border-green-500 bg-gradient-to-br from-slate-800 to-slate-900 transition-all duration-300 hover:border-green-400 hover:shadow-[0_0_40px_rgba(34,197,94,0.15)]"
+  className="group flex h-[300px] sm:h-[340px] md:h-[400px] lg:h-[480px] w-full cursor-pointer flex-col items-center justify-center rounded-[36px] border-2 border-dashed border-green-500 bg-gradient-to-br from-slate-800 to-slate-900 transition-all duration-300 hover:border-green-400 hover:shadow-[0_0_40px_rgba(34,197,94,0.15)]"
 >
 
   {preview ? (
@@ -158,33 +158,28 @@ export default function ArtworkUpload() {
   ) : (
 
     <>
+  <div className="flex h-28 w-28 items-center justify-center rounded-full bg-green-500/15 ring-1 ring-green-500/20 transition-all duration-300 group-hover:scale-110 group-hover:bg-green-500/25">
 
-      <div className="flex h-32 w-32 items-center justify-center rounded-full bg-green-500/10 ring-1 ring-green-500/20 transition-all duration-300 group-hover:scale-110 group-hover:bg-green-500/20">
-<UploadCloud
-  size={64}
-  strokeWidth={1.8}
-  className="text-green-400 transition-all duration-300 group-hover:scale-110"
-/>
+    <UploadCloud
+      size={62}
+      strokeWidth={1.8}
+      className="text-green-400"
+    />
 
-      </div>
+  </div>
 
-      <h3 className="mt-10 text-4xl lg:text-5xl font-black text-white">
-        Drag & Drop Your Artwork
-      </h3>
+  <h3 className="mt-8 text-center text-3xl font-black text-white md:text-4xl lg:text-5xl">
+    Drag & Drop Artwork
+  </h3>
 
-      <p className="mt-6 max-w-3xl text-center text-xl leading-9 text-slate-300">
-        Drag your files here or click anywhere inside this upload area.
-        Our designers will review your artwork and prepare a professional
-        print-ready proof for your approval.
-      </p>
+  <p className="mt-4 max-w-xl text-center text-base leading-7 text-slate-300 md:text-lg">
+    Tap anywhere to browse your files or drag and drop your artwork.
+  </p>
 
-      <div className="mt-10 rounded-full border border-green-500/30 bg-green-500/10 px-8 py-4 text-sm font-bold tracking-[4px] text-green-300">
-
-        AI • PDF • EPS • SVG • PNG • JPG
-
-      </div>
-
-    </>
+  <div className="mt-8 rounded-full border border-green-500/30 bg-green-500/10 px-6 py-3 text-xs font-bold tracking-[3px] text-green-300 md:text-sm">
+    AI • PDF • EPS • SVG • PNG • JPG
+  </div>
+</>
 
   )}
 
