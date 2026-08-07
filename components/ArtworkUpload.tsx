@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { UploadCloud } from "lucide-react";
 
 export default function ArtworkUpload() {
@@ -18,6 +18,8 @@ export default function ArtworkUpload() {
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const selectedFile = e.target.files?.[0];
@@ -142,10 +144,11 @@ export default function ArtworkUpload() {
   <div className="pointer-events-none absolute -top-32 h-72 w-72 rounded-full bg-green-500/10 blur-[120px]" /> 
 
   <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-green-600/5 blur-[140px]" />
-          <label
+   <label
   htmlFor="artwork-upload"
-  className="group flex h-[300px] sm:h-[340px] md:h-[400px] lg:h-[480px] w-full cursor-pointer flex-col items-center justify-center rounded-[36px] border-2 border-dashed border-green-500 bg-gradient-to-br from-slate-800 to-slate-900 transition-all duration-300 hover:border-green-400 hover:shadow-[0_0_40px_rgba(34,197,94,0.15)]"
+  className="group flex h-[300px] sm:h-[340px] md:h-[400px] lg:h-[480px] w-full cursor-pointer flex-col items-center justify-center rounded-[36px] border-2 border-dashed border-green-500 bg-gradient-to-br from-slate-800 to-slate-900 transition-all duration-300 hover:border-green-400"
 >
+
 
   {preview ? (
 
@@ -182,14 +185,13 @@ export default function ArtworkUpload() {
 </>
 
   )}
-
-  <input
-    id="artwork-upload"
-    type="file"
-    className="absolute h-0 w-0 opacity-0"
-    accept=".ai,.eps,.pdf,.svg,.png,.jpg,.jpeg"
-    onChange={handleFile}
-  />
+<input
+  id="artwork-upload"
+  type="file"
+  accept=".ai,.eps,.pdf,.svg,.png,.jpg,.jpeg"
+  onChange={handleFile}
+  className="sr-only"
+/>
 
 </label>
          {fileName && (
