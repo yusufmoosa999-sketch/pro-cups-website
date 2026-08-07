@@ -137,48 +137,13 @@ export default function CustomPrinting() {
 
         </section>
 
-        {/* ARTWORK UPLOAD */}
+       {/* ARTWORK UPLOAD */}
 
-        <section className="bg-slate-50 py-20">
+<section className="bg-slate-50 py-20">
 
-          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12">
+  <ArtworkUpload />
 
-            <div className="grid gap-12 lg:grid-cols-2">
-
-              <div>
-
-                <span className="inline-block rounded-full bg-green-100 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-700">
-                  Upload Artwork
-                </span>
-
-                <h2 className="mt-6 text-3xl font-black text-black sm:text-4xl">
-                  Send Us Your Design
-                </h2>
-
-                <p className="mt-6 text-lg leading-8 text-slate-700">
-                  Upload your logo, artwork or design files and our team
-                  will prepare a professional print proof before
-                  production begins.
-                </p>
-
-                <ul className="mt-8 space-y-4 text-slate-700">
-
-                  <li>✓ AI, PDF, EPS or SVG preferred</li>
-                  <li>✓ High resolution PNG accepted</li>
-                  <li>✓ Free digital proof included</li>
-                  <li>✓ Fast turnaround times</li>
-
-                </ul>
-
-              </div>
-
-              <ArtworkUpload />
-
-            </div>
-
-          </div>
-
-        </section>
+</section>
         {/* WHY PRINT WITH US */}
 
         <section className="bg-white py-20 lg:py-28">
