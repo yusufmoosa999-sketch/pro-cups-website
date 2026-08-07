@@ -143,7 +143,7 @@ export default function ArtworkUpload() {
 
   <div className="pointer-events-none absolute -top-32 h-72 w-72 rounded-full bg-green-500/10 blur-[120px]" /> 
 
-  <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-green-600/5 blur-[140px]" />
+  <div className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-green-600/5 blur-[140px]" />
    <label
   htmlFor="artwork-upload"
   className="group flex h-[300px] sm:h-[340px] md:h-[400px] lg:h-[480px] w-full cursor-pointer flex-col items-center justify-center rounded-[36px] border-2 border-dashed border-green-500 bg-gradient-to-br from-slate-800 to-slate-900 transition-all duration-300 hover:border-green-400"
