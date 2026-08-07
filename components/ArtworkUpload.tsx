@@ -270,19 +270,17 @@ export default function ArtworkUpload() {
 
 <div className="lg:col-span-2 mt-4 flex justify-center relative z-50">
 
- <button
+<button
   type="button"
-  onClick={() => {
-    alert("Button clicked");
-    submitQuote();
-  }}
+  onClick={submitQuote}
   disabled={loading}
-  className="relative z-50 w-full max-w-xl rounded-full bg-green-600 px-10 py-5 text-xl font-bold text-white"
+  className="w-full max-w-xl rounded-full bg-green-600 px-10 py-5 text-xl font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:bg-green-500 hover:shadow-lg hover:shadow-green-500/30 disabled:cursor-not-allowed disabled:opacity-50"
 >
+  {loading ? "Submitting Your Request..." : "Upload Artwork & Request Quote"}
+</button>
     
   
-    {loading ? "Submitting Your Request..." : "Upload Artwork & Request Quote"}
-  </button>
+  
 
 </div>
 
