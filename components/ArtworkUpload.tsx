@@ -139,7 +139,7 @@ export default function ArtworkUpload() {
 
     <div className="relative mt-20 overflow-hidden rounded-[40px] border border-slate-700 bg-[#111827] p-8 shadow-[0_25px_80px_rgba(0,0,0,0.45)] lg:p-14">
 
-  <div className="absolute -top-32 right-0 h-72 w-72 rounded-full bg-green-500/10 blur-[120px]" />
+  <div className="pointer-events-none absolute -top-32 h-72 w-72 rounded-full bg-green-500/10 blur-[120px]" /> 
 
   <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-green-600/5 blur-[140px]" />
           <label
@@ -186,7 +186,7 @@ export default function ArtworkUpload() {
   <input
     id="artwork-upload"
     type="file"
-    className="hidden"
+    className="absolute h-0 w-0 opacity-0"
     accept=".ai,.eps,.pdf,.svg,.png,.jpg,.jpeg"
     onChange={handleFile}
   />
