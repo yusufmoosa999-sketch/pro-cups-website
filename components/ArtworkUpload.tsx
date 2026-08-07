@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { UploadCloud } from "lucide-react";
 
 export default function ArtworkUpload() {
   const [preview, setPreview] = useState<string | null>(null);
@@ -111,199 +112,194 @@ export default function ArtworkUpload() {
   }
 
   return (
-    <section className="bg-[#0f172a] py-24">
+
+<section className="bg-[#0b1120] py-24">
 
   <div className="mx-auto max-w-[1500px] px-6 lg:px-10">
 
     <div className="text-center">
 
-      <p className="font-bold uppercase tracking-[8px] text-green-400">
-        REQUEST A QUOTE
-      </p>
+      <span className="inline-flex rounded-full bg-green-500/10 px-6 py-2 text-sm font-bold uppercase tracking-[4px] text-green-400">
+        Request a Quote
+      </span>
 
-      <h2 className="mt-5 text-4xl font-black text-white md:text-5xl lg:text-6xl">
+      <h2 className="mx-auto mt-8 max-w-5xl text-5xl font-black leading-tight text-white md:text-6xl lg:text-7xl">
         Upload Your Artwork
       </h2>
 
-      <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-300">
-        Upload your logo, artwork or print-ready files and our team will
-        prepare a professional proof before manufacturing begins.
+      <p className="mx-auto mt-8 max-w-3xl text-xl leading-9 text-slate-300">
+
+        Send us your logo, artwork or print-ready files and our design team
+        will prepare a professional digital proof for your approval before
+        production begins.
+
       </p>
 
     </div>
 
-    <div className="mt-14 rounded-[40px] border border-slate-700 bg-[#111827] p-8 shadow-2xl lg:p-12">
-          <p className="font-bold uppercase tracking-[8px] text-green-700">
-            REQUEST A QUOTE
-          </p>
+    <div className="relative mt-20 overflow-hidden rounded-[40px] border border-slate-700 bg-[#111827] p-8 shadow-[0_25px_80px_rgba(0,0,0,0.45)] lg:p-14">
 
-          <h2 className="mt-5 text-4xl font-black text-slate-900 md:text-5xl lg:text-6xl">
-            Upload Your Artwork
-          </h2>
+  <div className="absolute -top-32 right-0 h-72 w-72 rounded-full bg-green-500/10 blur-[120px]" />
 
-          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
-            Upload your logo, artwork or print-ready files and our team will
-            prepare a professional proof before manufacturing begins.
-          </p>
-
-        </div>
-
-        <div className="mt-14 rounded-[40px] border border-slate-200 bg-white p-8 shadow-xl lg:p-12">
-
+  <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-green-600/5 blur-[140px]" />
           <label
   htmlFor="artwork-upload"
-  className="group flex h-[280px] md:h-[360px] lg:h-[460px] w-full cursor-pointer flex-col items-center justify-center rounded-[36px] border-2 border-dashed border-green-500 bg-slate-800 transition-all duration-300 hover:border-green-400 hover:bg-slate-700"
+  className="group flex h-[320px] md:h-[420px] lg:h-[500px] w-full cursor-pointer flex-col items-center justify-center rounded-[36px] border-2 border-dashed border-green-500 bg-gradient-to-br from-slate-800 to-slate-900 transition-all duration-300 hover:border-green-400 hover:shadow-[0_0_40px_rgba(34,197,94,0.15)]"
 >
-          
 
-            {preview ? (
+  {preview ? (
 
-              <img
-                src={preview}
-                alt="Artwork Preview"
-                className="h-full w-full rounded-[30px] object-cover"
-              />
+    <img
+      src={preview}
+      alt="Artwork Preview"
+      className="h-full w-full rounded-[34px] object-cover"
+    />
 
-            ) : (
+  ) : (
 
-              <>
-                <div className="flex h-28 w-28 items-center justify-center rounded-full bg-green-500/15 transition-all duration-300 group-hover:scale-110 group-hover:bg-green-500/25">
+    <>
 
-                  <span className="text-6xl">
-                    📁
-                  </span>
+      <div className="flex h-32 w-32 items-center justify-center rounded-full bg-green-500/10 ring-1 ring-green-500/20 transition-all duration-300 group-hover:scale-110 group-hover:bg-green-500/20">
+<UploadCloud
+  size={64}
+  strokeWidth={1.8}
+  className="text-green-400 transition-all duration-300 group-hover:scale-110"
+/>
 
-                </div>
+      </div>
 
-                <h3 className="mt-8 text-4xl font-black text-white">
-                  Drag & Drop Your Artwork
-                </h3>
+      <h3 className="mt-10 text-4xl lg:text-5xl font-black text-white">
+        Drag & Drop Your Artwork
+      </h3>
 
-                <p className="mt-5 max-w-2xl text-center text-xl leading-8 text-slate-300">
-                  Drag your files here or click anywhere inside this area to browse.
-                </p>
+      <p className="mt-6 max-w-3xl text-center text-xl leading-9 text-slate-300">
+        Drag your files here or click anywhere inside this upload area.
+        Our designers will review your artwork and prepare a professional
+        print-ready proof for your approval.
+      </p>
 
-                <div className="mt-8 rounded-full bg-green-500/15 px-8 py-3 text-sm font-bold tracking-[3px] text-green-300">
-                  AI • PDF • EPS • SVG • PNG • JPG
-                </div>
+      <div className="mt-10 rounded-full border border-green-500/30 bg-green-500/10 px-8 py-4 text-sm font-bold tracking-[4px] text-green-300">
 
-              </>
+        AI • PDF • EPS • SVG • PNG • JPG
 
-            )}
+      </div>
 
+    </>
+
+  )}
+
+  <input
+    id="artwork-upload"
+    type="file"
+    className="hidden"
+    accept=".ai,.eps,.pdf,.svg,.png,.jpg,.jpeg"
+    onChange={handleFile}
+  />
+
+</label>
+         {fileName && (
+
+  <div className="mt-8 rounded-3xl border border-green-500/30 bg-green-500/10 p-6">
+
+    <p className="text-center text-lg font-semibold text-green-300">
+      ✓ <span className="font-bold">{fileName}</span> uploaded successfully
+    </p>
+
+  </div>
+
+)}
+<div className="my-16 h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+          <div className="mt-20 grid grid-cols-1 gap-8 lg:grid-cols-2">
             <input
-              id="artwork-upload"
-              type="file"
-              className="hidden"
-              accept=".ai,.eps,.pdf,.svg,.png,.jpg,.jpeg"
-              onChange={handleFile}
-            />
+  value={companyName}
+  onChange={(e) => setCompanyName(e.target.value)}
+  placeholder="Company Name *"
+  className="h-[68px] rounded-2xl border border-slate-700 bg-slate-900/70 px-6 text-lg font-medium text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
+/>
 
-          </label>
+<input
+  value={contactName}
+  onChange={(e) => setContactName(e.target.value)}
+  placeholder="Contact Person *"
+  className="h-[68px] rounded-2xl border border-slate-700 bg-slate-900/70 px-6 text-lg font-medium text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
+/>
 
-          {fileName && (
+<input
+  type="email"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  placeholder="Email Address *"
+  className="h-[68px] rounded-2xl border border-slate-700 bg-slate-900/70 px-6 text-lg font-medium text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
+/>
 
-            <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-5">
+<input
+  value={phone}
+  onChange={(e) => setPhone(e.target.value)}
+  placeholder="Phone Number"
+  className="h-[68px] rounded-2xl border border-slate-700 bg-slate-900/70 px-6 text-lg font-medium text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
+/>
 
-              <p className="font-bold text-green-700">
-                ✓ {fileName}
-              </p>
+<select
+  value={product}
+  onChange={(e) => setProduct(e.target.value)}
+  className="h-[68px] rounded-2xl border border-slate-700 bg-slate-900/70 px-6 text-lg font-medium text-white outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
+>
+  <option value="">Select Product *</option>
+  <option>Kraft Vertical Ripple</option>
+  <option>Black Vertical Ripple</option>
+  <option>Coffee Bean Vertical Ripple</option>
+  <option>Kraft Double Wall</option>
+  <option>White Double Wall</option>
+</select>
 
-            </div>
+<input
+  value={quantity}
+  onChange={(e) => setQuantity(e.target.value)}
+  placeholder="Estimated Quantity"
+  className="h-[68px] rounded-2xl border border-slate-700 bg-slate-900/70 px-6 text-lg font-medium text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
+/>
 
-          )}
+<div className="lg:col-span-2">
 
-          <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <input
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="Company Name *"
-              className="h-16 rounded-2xl border border-slate-300 px-6 text-lg outline-none transition focus:border-green-600 focus:ring-4 focus:ring-green-100"
-            />
+  <textarea
+    rows={7}
+    value={message}
+    onChange={(e) => setMessage(e.target.value)}
+    placeholder="Tell us about your project, branding, colours, deadlines or any special requirements..."
+    className="w-full rounded-2xl border border-slate-700 bg-slate-900/70 p-6 text-lg leading-8 text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
+  />
 
-            <input
-              value={contactName}
-              onChange={(e) => setContactName(e.target.value)}
-              placeholder="Contact Name *"
-              className="h-16 rounded-2xl border border-slate-300 px-6 text-lg outline-none transition focus:border-green-600 focus:ring-4 focus:ring-green-100"
-            />
+</div>
 
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email Address *"
-              className="h-16 rounded-2xl border border-slate-300 px-6 text-lg outline-none transition focus:border-green-600 focus:ring-4 focus:ring-green-100"
-            />
+<div className="lg:col-span-2 mt-4 flex justify-center">
 
-            <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Phone Number"
-              className="h-16 rounded-2xl border border-slate-300 px-6 text-lg outline-none transition focus:border-green-600 focus:ring-4 focus:ring-green-100"
-            />
+  <button
+    onClick={submitQuote}
+    disabled={loading}
+    className="w-full max-w-xl rounded-full bg-green-600 px-10 py-5 text-xl font-bold text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-green-500 hover:shadow-green-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    {loading ? "Submitting Your Request..." : "Upload Artwork & Request Quote"}
+  </button>
 
-            <select
-              value={product}
-              onChange={(e) => setProduct(e.target.value)}
-              className="h-16 rounded-2xl border border-slate-300 px-6 text-lg outline-none transition focus:border-green-600 focus:ring-4 focus:ring-green-100"
-            >
-              <option value="">Select Product *</option>
-              <option>Kraft Vertical Ripple</option>
-              <option>Black Vertical Ripple</option>
-              <option>Coffee Bean Vertical Ripple</option>
-              <option>Kraft Double Wall</option>
-              <option>White Double Wall</option>
-            </select>
+</div>
 
-            <input
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              placeholder="Quantity Required"
-              className="h-16 rounded-2xl border border-slate-300 px-6 text-lg outline-none transition focus:border-green-600 focus:ring-4 focus:ring-green-100"
-            />
+{success && (
 
-            <div className="lg:col-span-2">
+  <div className="lg:col-span-2 mt-6 rounded-3xl border border-green-500/30 bg-green-500/10 p-8 text-center">
 
-              <textarea
-                rows={7}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Tell us about your project, printing requirements or any special requests..."
-                className="w-full rounded-2xl border border-slate-300 p-6 text-lg outline-none transition focus:border-green-600 focus:ring-4 focus:ring-green-100"
-              />
+    <h4 className="text-3xl font-black text-green-400">
+      ✓ Artwork Received Successfully
+    </h4>
 
-            </div>
+    <p className="mt-4 text-lg leading-8 text-slate-300">
+      Thank you for choosing <strong>Pro Cups International</strong>.
+      Our team will review your artwork and contact you shortly with a
+      professional print proof and quotation.
+    </p>
 
-            <div className="lg:col-span-2 flex justify-center pt-2">
+  </div>
 
-              <button
-                onClick={submitQuote}
-                disabled={loading}
-                className="w-full max-w-lg rounded-2xl bg-green-600 py-5 text-xl font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {loading ? "Submitting..." : "Submit Quote Request"}
-              </button>
-
-            </div>
-
-            {success && (
-
-              <div className="lg:col-span-2 rounded-3xl border border-green-200 bg-green-50 p-8 text-center">
-
-                <h4 className="text-3xl font-black text-green-700">
-                  ✓ Quote Submitted Successfully
-                </h4>
-
-                <p className="mt-4 text-lg leading-8 text-slate-700">
-                  Thank you for contacting Pro Cups International. Your quote
-                  request has been received and one of our consultants will
-                  contact you shortly.
-                </p>
-
-              </div>
-
-            )}
+)}
           </div>
 
         </div>
