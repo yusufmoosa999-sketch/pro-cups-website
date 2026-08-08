@@ -30,12 +30,21 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
+  setError(error.message);
+  setLoading(false);
+  return;
+}
 
-    router.push("/dashboard");
+const redirectParam = new URLSearchParams(window.location.search).get(
+  "redirect"
+);
+
+const redirectTo =
+  redirectParam && redirectParam.startsWith("/")
+    ? redirectParam
+    : "/portal";
+
+router.push(redirectTo);
   }
 
   return (

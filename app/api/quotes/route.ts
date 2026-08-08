@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,6 +10,41 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
   try {
+    const cookieStore = await cookies();
+
+const authSupabase = createServerClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // Cookies may be read-only in this context.
+        }
+      },
+    },
+  }
+);
+
+const {
+  data: { user },
+} = await authSupabase.auth.getUser();
+if (!user) {
+  return NextResponse.json(
+    {
+      success: false,
+      error: "You must be logged in to submit a quote.",
+    },
+    { status: 401 }
+  );
+}
     const body = await req.json();
 
     console.log("Inserting quote:", body);
@@ -39,6 +76,7 @@ export async function POST(req: Request) {
           message,
           artwork_url,
           artwork_path,
+          customer_id: user.id,
         },
       ])
       .select();
