@@ -33,7 +33,7 @@ export async function PATCH(
     // Make sure this quote belongs to the logged-in customer
     const { data: quote, error: quoteError } = await adminSupabase
       .from("quote_requests")
-      .select("id, customer_id")
+      .select("id, customer_id, status")
       .eq("id", id)
       .eq("customer_id", user.id)
       .single();
@@ -71,13 +71,10 @@ const updateData = {
     approvalStatus === "approved"
       ? new Date().toISOString()
       : null,
+  ...(approvalStatus === "approved"
+    ? { status: "Approved" }
+    : {}),
 };
-
-// If the customer approves the print proof,
-// move the quote to Approved automatically.
-if (approvalStatus === "approved") {
-  updateData.status = "Approved";
-}
 
     const { error: updateError } = await adminSupabase
       .from("quote_requests")
