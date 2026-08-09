@@ -64,36 +64,13 @@ export async function PATCH(
 
 const now = new Date().toISOString();
 
-const updateData: {
-  customer_approval_status: string;
-  customer_approval_note: string | null;
-  customer_approved_at: string | null;
-  customer_quote_status: string;
-  customer_quote_accepted_at: string | null;
-  status: string;
-} = {
+const updateData = {
   customer_approval_status: approvalStatus,
   customer_approval_note: note || null,
-
   customer_approved_at:
     approvalStatus === "approved"
-      ? now
+      ? new Date().toISOString()
       : null,
-
-  customer_quote_status:
-    approvalStatus === "approved"
-      ? "accepted"
-      : "pending",
-
-  customer_quote_accepted_at:
-    approvalStatus === "approved"
-      ? now
-      : null,
-
-  status:
-    approvalStatus === "approved"
-      ? "Approved"
-      : "Quoted",
 };
 
 // If the customer approves the print proof,
