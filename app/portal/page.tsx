@@ -20,6 +20,105 @@ export default async function PortalDashboard() {
     const companyName =
         user.user_metadata?.company_name ||
         "Your Company";
+
+    const { data: quotes } = await supabase
+        .from("quote_requests")
+        .select(`
+        id,
+        created_at,
+        product,
+        quantity,
+        status,
+        artwork_path,
+        artwork_url,
+        customer_approval_status,
+        customer_approved_at,
+        customer_quote_status,
+        customer_quote_accepted_at
+    `)
+        .eq("customer_id", user.id)
+        .order("created_at", { ascending: false });
+
+    const customerQuotes = quotes || [];
+
+    const outstandingQuotes = customerQuotes.filter(
+        (quote) =>
+            !["Completed", "Cancelled"].includes(quote.status)
+    );
+
+    const artworkFiles = customerQuotes.filter(
+        (quote) =>
+            !!quote.artwork_path || !!quote.artwork_url
+    );
+
+    const recentQuotes = customerQuotes.slice(0, 2);
+
+    // Quotes that have effectively become orders
+    const activeOrders = customerQuotes.filter((quote) =>
+        ["Approved", "In Production", "Ready"].includes(quote.status)
+    );
+
+    // Completed orders
+    const completedOrders = customerQuotes.filter(
+        (quote) => quote.status === "Completed"
+    );
+
+    // Latest active order
+    const currentOrder = activeOrders[0] || null;
+
+
+
+    const activityItems = customerQuotes
+        .flatMap((quote) => {
+            const activities = [];
+
+            // Quote received
+            activities.push({
+                type: "quote",
+                title: "Quote received",
+                description: quote.product || "Quote request",
+                date: new Date(quote.created_at),
+            });
+
+            // Artwork uploaded
+            if (quote.artwork_path || quote.artwork_url) {
+                activities.push({
+                    type: "artwork",
+                    title: "Artwork uploaded",
+                    description: quote.product || "Artwork",
+                    date: new Date(quote.created_at),
+                });
+            }
+
+            // Print proof approved
+            if (
+                quote.customer_approval_status === "approved" &&
+                quote.customer_approved_at
+            ) {
+                activities.push({
+                    type: "approved",
+                    title: "Print proof approved",
+                    description: quote.product || "Quote",
+                    date: new Date(quote.customer_approved_at),
+                });
+            }
+
+            return activities;
+        })
+        .sort((a, b) => b.date.getTime() - a.date.getTime())
+        .slice(0, 3);
+
+    const currentOrderProgress =
+        currentOrder?.status === "Approved"
+            ? 25
+            : currentOrder?.status === "In Production"
+                ? 65
+                : currentOrder?.status === "Ready"
+                    ? 90
+                    : currentOrder?.status === "Completed"
+                        ? 100
+                        : 0;
+
     return (
         <div className="space-y-10">
 
@@ -70,7 +169,7 @@ export default async function PortalDashboard() {
                     <div className="mt-4 flex items-end justify-between">
 
                         <p className="text-4xl font-black text-slate-900">
-                            2
+                            {outstandingQuotes.length}
                         </p>
 
                         <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-700">
@@ -91,11 +190,11 @@ export default async function PortalDashboard() {
                     <div className="mt-4 flex items-end justify-between">
 
                         <p className="text-4xl font-black text-slate-900">
-                            1
+                            {activeOrders.length}
                         </p>
 
                         <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-700">
-                            In Production
+                            {currentOrder?.status || "None"}
                         </span>
 
                     </div>
@@ -112,7 +211,7 @@ export default async function PortalDashboard() {
                     <div className="mt-4 flex items-end justify-between">
 
                         <p className="text-4xl font-black text-slate-900">
-                            8
+                            {completedOrders.length}
                         </p>
 
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-600">
@@ -133,7 +232,7 @@ export default async function PortalDashboard() {
                     <div className="mt-4 flex items-end justify-between">
 
                         <p className="text-4xl font-black text-slate-900">
-                            12
+                            {artworkFiles.length}
                         </p>
 
                         <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-bold text-blue-700">
@@ -162,13 +261,15 @@ export default async function PortalDashboard() {
                             </p>
 
                             <h2 className="mt-2 text-2xl font-black text-slate-900">
-                                Order #PC-1028
+                                {currentOrder
+                                    ? `Order from Quote #${currentOrder.id.slice(0, 8).toUpperCase()}`
+                                    : "No Active Order"}
                             </h2>
 
                         </div>
 
                         <span className="w-fit rounded-full bg-green-100 px-4 py-2 text-sm font-bold text-green-700">
-                            In Production
+                            {currentOrder?.status || "No Active Order"}
                         </span>
 
                     </div>
@@ -185,14 +286,17 @@ export default async function PortalDashboard() {
                             </span>
 
                             <span className="text-green-600">
-                                65%
+                                {currentOrderProgress}%
                             </span>
 
                         </div>
 
                         <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100">
 
-                            <div className="h-full w-[65%] rounded-full bg-green-600" />
+                            <div
+                                className="h-full rounded-full bg-green-600 transition-all duration-500"
+                                style={{ width: `${currentOrderProgress}%` }}
+                            />
 
                         </div>
 
@@ -286,85 +390,63 @@ export default async function PortalDashboard() {
 
                     <div className="mt-8 space-y-7">
 
-                        <div className="flex gap-4">
+                        {activityItems.length > 0 ? (
+                            activityItems.map((activity, index) => (
+                                <div
+                                    key={`${activity.title}-${activity.date.getTime()}-${index}`}
+                                    className="flex gap-4"
+                                >
+                                    <div
+                                        className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${activity.type === "approved"
+                                            ? "bg-green-100 text-green-700"
+                                            : activity.type === "artwork"
+                                                ? "bg-blue-100 text-blue-700"
+                                                : "bg-amber-100 text-amber-700"
+                                            }`}
+                                    >
+                                        {activity.type === "approved"
+                                            ? "✓"
+                                            : activity.type === "artwork"
+                                                ? "↑"
+                                                : "R"}
+                                    </div>
 
-                            <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
-                                ✓
-                            </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900">
+                                            {activity.title}
+                                        </p>
 
-                            <div>
+                                        <p className="mt-1 text-sm text-slate-500">
+                                            {activity.description}
+                                        </p>
 
-                                <p className="font-bold text-slate-900">
-                                    Artwork approved
-                                </p>
-
-                                <p className="mt-1 text-sm text-slate-500">
-                                    Order #PC-1028
-                                </p>
-
-                                <p className="mt-1 text-xs text-slate-400">
-                                    Today, 09:42
-                                </p>
-
-                            </div>
-
-                        </div>
-
-
-                        <div className="flex gap-4">
-
-                            <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
-                                ↑
-                            </div>
-
-                            <div>
-
-                                <p className="font-bold text-slate-900">
-                                    Artwork uploaded
-                                </p>
-
-                                <p className="mt-1 text-sm text-slate-500">
-                                    Coffee Cup Branding
-                                </p>
-
-                                <p className="mt-1 text-xs text-slate-400">
-                                    Yesterday, 14:20
-                                </p>
-
-                            </div>
-
-                        </div>
-
-
-                        <div className="flex gap-4">
-
-                            <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-700">
-                                R
-                            </div>
-
-                            <div>
-
-                                <p className="font-bold text-slate-900">
-                                    Quote received
-                                </p>
-
-                                <p className="mt-1 text-sm text-slate-500">
-                                    Quote #Q-2041
-                                </p>
-
-                                <p className="mt-1 text-xs text-slate-400">
-                                    2 days ago
-                                </p>
-
-                            </div>
-
-                        </div>
+                                        <p className="mt-1 text-xs text-slate-400">
+                                            {activity.date.toLocaleString("en-ZA", {
+                                                day: "2-digit",
+                                                month: "short",
+                                                year: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-sm text-slate-500">
+                                No recent activity yet.
+                            </p>
+                        )}
 
                     </div>
 
                 </div>
 
             </div>
+
+
+
+
 
 
             {/* QUOTES */}
@@ -423,58 +505,51 @@ export default async function PortalDashboard() {
 
                         </thead>
 
-                        <tbody>
-
-                            <tr className="border-b border-slate-100">
-
-                                <td className="py-5 font-bold text-slate-900">
-                                    #Q-2041
+                        {recentQuotes.map((quote) => (
+                            <tr
+                                key={quote.id}
+                                className="border-b border-slate-100"
+                            >
+                                <td className="py-5">
+                                    <Link
+                                        href={`/portal/quotes/${quote.id}`}
+                                        className="font-bold text-slate-900 hover:text-green-600"
+                                    >
+                                        #{quote.id.slice(0, 8).toUpperCase()}
+                                    </Link>
                                 </td>
 
                                 <td className="py-5 text-slate-600">
-                                    Black Vertical Ripple
+                                    {quote.product || "-"}
                                 </td>
 
                                 <td className="py-5 text-slate-500">
-                                    07 Aug 2026
+                                    {new Date(quote.created_at).toLocaleDateString(
+                                        "en-ZA",
+                                        {
+                                            day: "2-digit",
+                                            month: "short",
+                                            year: "numeric",
+                                        }
+                                    )}
                                 </td>
 
                                 <td className="py-5">
-
-                                    <span className="rounded-full bg-amber-100 px-3 py-1.5 text-sm font-bold text-amber-700">
-                                        Under Review
+                                    <span
+                                        className={`rounded-full px-3 py-1.5 text-sm font-bold ${quote.status === "Approved"
+                                            ? "bg-green-100 text-green-700"
+                                            : quote.status === "Completed"
+                                                ? "bg-emerald-100 text-emerald-700"
+                                                : quote.status === "Cancelled"
+                                                    ? "bg-red-100 text-red-700"
+                                                    : "bg-amber-100 text-amber-700"
+                                            }`}
+                                    >
+                                        {quote.status || "New"}
                                     </span>
-
                                 </td>
-
                             </tr>
-
-
-                            <tr>
-
-                                <td className="py-5 font-bold text-slate-900">
-                                    #Q-2038
-                                </td>
-
-                                <td className="py-5 text-slate-600">
-                                    Kraft Double Wall
-                                </td>
-
-                                <td className="py-5 text-slate-500">
-                                    02 Aug 2026
-                                </td>
-
-                                <td className="py-5">
-
-                                    <span className="rounded-full bg-green-100 px-3 py-1.5 text-sm font-bold text-green-700">
-                                        Approved
-                                    </span>
-
-                                </td>
-
-                            </tr>
-
-                        </tbody>
+                        ))}
 
                     </table>
 

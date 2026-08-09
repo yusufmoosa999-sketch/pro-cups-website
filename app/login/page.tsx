@@ -30,21 +30,21 @@ export default function LoginPage() {
     });
 
     if (error) {
-  setError(error.message);
-  setLoading(false);
-  return;
-}
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
 
-const redirectParam = new URLSearchParams(window.location.search).get(
-  "redirect"
-);
+    const redirectParam = new URLSearchParams(window.location.search).get(
+      "redirect"
+    );
 
-const redirectTo =
-  redirectParam && redirectParam.startsWith("/")
-    ? redirectParam
-    : "/portal";
+    const redirectTo =
+      redirectParam && redirectParam.startsWith("/")
+        ? redirectParam
+        : "/";
 
-router.push(redirectTo);
+    router.push(redirectTo);
   }
 
   return (
@@ -110,7 +110,7 @@ router.push(redirectTo);
                   className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
                   required
                 />
-                                {error && (
+                {error && (
                   <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
                     {error}
                   </div>

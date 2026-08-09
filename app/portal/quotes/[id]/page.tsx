@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import QuoteArtworkUploader from "@/components/QuoteArtworkUploader";
+import CustomerQuoteApproval from "@/components/CustomerQuoteApproval";
+import CustomerQuotationAcceptance from "@/components/CustomerQuotationAcceptance";
 
 export default async function QuoteDetailsPage({
     params,
@@ -31,52 +33,66 @@ export default async function QuoteDetailsPage({
         notFound();
     }
 
-    const quoteStatus = quote.status || "received";
+    const quoteStatus = quote.status || "New";
 
     const statusSteps = [
         {
-            key: "received",
+            key: "New",
             title: "Quote Received",
             description:
                 "Your quotation request has been received by Pro Cups International.",
         },
         {
-            key: "artwork_review",
+            key: "Contacted",
             title: "Artwork Under Review",
             description:
-                "Our design team is reviewing your artwork and checking that it is suitable for production.",
+                "Our team is reviewing your requirements and artwork.",
         },
         {
-            key: "proof_ready",
-            title: "Print Proof Ready",
-            description:
-                "Your professional print proof has been prepared and is ready for review.",
-        },
-        {
-            key: "awaiting_approval",
-            title: "Awaiting Your Approval",
-            description:
-                "Please review your print proof and approve the artwork or request changes.",
-        },
-        {
-            key: "approved",
-            title: "Artwork Approved",
-            description:
-                "Your artwork has been approved and your quotation can now be finalised.",
-        },
-        {
-            key: "quoted",
+            key: "Quoted",
             title: "Quotation Ready",
             description:
-                "Your quotation is ready to review.",
+                "Your quotation has been prepared and is ready for you to review.",
+        },
+        {
+            key: "Awaiting Approval",
+            title: "Awaiting Your Approval",
+            description:
+                "Please review your quotation and print proof and approve the project or request changes.",
+        },
+        {
+            key: "Approved",
+            title: "Artwork Approved",
+            description:
+                "Your print proof has been approved and your project can now proceed.",
+        },
+        {
+            key: "In Production",
+            title: "In Production",
+            description:
+                "Your order is currently being manufactured.",
+        },
+        {
+            key: "Ready",
+            title: "Ready for Collection / Delivery",
+            description:
+                "Your order has been completed and is ready for collection or delivery.",
+        },
+        {
+            key: "Completed",
+            title: "Completed",
+            description:
+                "Your order has been completed successfully.",
         },
     ];
 
     const currentStatusIndex = Math.max(
         0,
-        statusSteps.findIndex((step) => step.key === quoteStatus)
+        statusSteps.findIndex(
+            (step) => step.key === quoteStatus
+        )
     );
-
+    const isCancelled = quoteStatus === "Cancelled";
     return (
         <div className="space-y-8">
 
@@ -332,13 +348,27 @@ export default async function QuoteDetailsPage({
                         </div>
 
                         <div className="flex justify-between gap-6">
-
                             <span className="text-slate-500">
                                 Quote
                             </span>
 
-                            <span className="font-bold text-amber-600">
-                                Being Prepared
+                            <span
+                                className={`font-bold ${quote.status === "Approved"
+                                    ? "text-green-600"
+                                    : quote.status === "Quoted"
+                                        ? "text-purple-600"
+                                        : quote.status === "Contacted"
+                                            ? "text-yellow-600"
+                                            : "text-amber-600"
+                                    }`}
+                            >
+                                {quote.status === "Approved"
+                                    ? "Approved"
+                                    : quote.status === "Quoted"
+                                        ? "Being Prepared"
+                                        : quote.status === "Contacted"
+                                            ? "Being Prepared"
+                                            : quote.status || "Pending"}
                             </span>
 
                         </div>
@@ -362,14 +392,205 @@ export default async function QuoteDetailsPage({
 
                     <QuoteArtworkUploader
                         quoteId={String(quote.id)}
-                        existingArtworkPath={quote.artwork_path}
+                        existingArtworkPath={quote.artwork_path || quote.artwork_url}
                     />
 
                 </div>
             </div>
 
 
+            {/* QUOTATION */}
 
+            {quote.total_amount != null && (
+                <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-7 shadow-sm md:p-10">
+
+                    <p className="text-sm font-bold uppercase tracking-[3px] text-green-600">
+                        Quotation
+                    </p>
+
+                    <h2 className="mt-2 text-2xl font-black text-slate-900 md:text-3xl">
+                        Your Quotation
+                    </h2>
+
+                    <p className="mt-2 max-w-2xl text-slate-500">
+                        Your quotation has been prepared by Pro Cups International.
+                        Please review the pricing and print proof below.
+                    </p>
+
+
+                    {/* PRICE BREAKDOWN */}
+
+                    <div className="mt-8 rounded-2xl bg-slate-50 p-5 md:p-7">
+
+                        <div className="space-y-4">
+
+                            <div className="flex items-center justify-between gap-6">
+                                <span className="text-slate-500">
+                                    Quantity
+                                </span>
+
+                                <span className="font-bold text-slate-900">
+                                    {quote.quantity
+                                        ? Number(quote.quantity).toLocaleString()
+                                        : "—"}
+                                </span>
+                            </div>
+
+
+                            <div className="flex items-center justify-between gap-6">
+                                <span className="text-slate-500">
+                                    Unit Price
+                                </span>
+
+                                <span className="font-bold text-slate-900">
+                                    {quote.unit_price != null
+                                        ? `R${Number(quote.unit_price).toFixed(2)}`
+                                        : "—"}
+                                </span>
+                            </div>
+
+
+                            <div className="flex items-center justify-between gap-6">
+                                <span className="text-slate-500">
+                                    Subtotal
+                                </span>
+
+                                <span className="font-bold text-slate-900">
+                                    {quote.subtotal != null
+                                        ? `R${Number(quote.subtotal).toFixed(2)}`
+                                        : "—"}
+                                </span>
+                            </div>
+
+
+                            <div className="flex items-center justify-between gap-6">
+                                <span className="text-slate-500">
+                                    VAT (15%)
+                                </span>
+
+                                <span className="font-bold text-slate-900">
+                                    {quote.vat_amount != null
+                                        ? `R${Number(quote.vat_amount).toFixed(2)}`
+                                        : "—"}
+                                </span>
+                            </div>
+
+
+                            <div className="border-t border-slate-200 pt-5">
+
+                                <div className="flex items-center justify-between gap-6">
+
+                                    <span className="text-lg font-black text-slate-900">
+                                        Total
+                                    </span>
+
+                                    <span className="text-2xl font-black text-green-700 md:text-3xl">
+                                        {quote.total_amount != null
+                                            ? `R${Number(quote.total_amount).toFixed(2)}`
+                                            : "—"}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    {/* QUOTATION NOTES */}
+
+                    {quote.quotation_notes && (
+                        <div className="mt-6">
+
+                            <p className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                                Notes
+                            </p>
+
+                            <div className="mt-2 rounded-2xl bg-slate-50 p-5 text-sm leading-7 text-slate-700">
+                                {quote.quotation_notes}
+                            </div>
+
+                        </div>
+                    )}
+
+
+                    {/* PRINT PROOF */}
+
+                    <div className="mt-8">
+
+                        <p className="text-sm font-bold uppercase tracking-[3px] text-green-600">
+                            Print Proof
+                        </p>
+
+                        <h3 className="mt-2 text-xl font-black text-slate-900">
+                            Review Your Print Proof
+                        </h3>
+
+                        {quote.quotation_proof_url ? (
+
+                            <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 p-5">
+
+                                <p className="font-bold text-green-800">
+                                    Your print proof is ready.
+                                </p>
+
+                                <p className="mt-1 text-sm text-green-700">
+                                    Please review the proof before your quotation
+                                    is approved for production.
+                                </p>
+
+                                <a
+                                    href={quote.quotation_proof_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-green-600 px-6 py-3 font-bold text-white transition hover:bg-green-700 sm:w-auto"
+                                >
+                                    View Print Proof
+                                </a>
+
+                            </div>
+
+
+
+                        ) : (
+
+                            <div className="mt-4 rounded-2xl bg-slate-50 p-5">
+
+                                <p className="font-bold text-slate-700">
+                                    Print proof not ready yet.
+                                </p>
+
+                                <p className="mt-1 text-sm text-slate-500">
+                                    Our team will upload your proof once it has
+                                    been prepared.
+                                </p>
+
+                            </div>
+
+                        )}
+
+                    </div>
+
+                </div>
+            )}
+
+            {quote.quotation_proof_url && (
+                <CustomerQuoteApproval
+                    quoteId={quote.id}
+                    currentStatus={quote.customer_approval_status}
+                />
+            )}
+
+            {quote.customer_approval_status === "approved" &&
+                quote.total_amount != null && (
+                    <CustomerQuotationAcceptance
+                        quoteId={quote.id}
+                        currentStatus={quote.customer_quote_status}
+                        quotationTotal={quote.total_amount}
+                    />
+                )}
 
             {/* HELP */}
 
