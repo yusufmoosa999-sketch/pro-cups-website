@@ -1,18 +1,15 @@
 import Link from "next/link";
-import FadeIn from "@/components/FadeIn";
-
 import Image from "next/image";
-import Navbar from "@/components/Navbar";
-
-
 import type { Metadata } from "next";
-
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
-  title: "Premium Paper Cup Manufacturer South Africa",
+  title: "Pro Cups International | Premium Paper Cups South Africa",
   description:
-    "Pro Cups International manufactures premium ripple cups, double wall cups, single wall cups and custom printed paper cups in South Africa.",
+    "Pro Cups International manufactures premium ripple cups, double wall cups and custom printed paper cups in South Africa.",
 };
+
 const products = [
   {
     name: "Kraft Vertical Ripple",
@@ -41,845 +38,738 @@ const products = [
   },
 ];
 
+const faqs = [
+  {
+    question: "What is the minimum order quantity?",
+    answer:
+      "Our minimum order quantity is 1,000 paper cups, making custom printed cups accessible to businesses of different sizes.",
+  },
+  {
+    question: "Do you manufacture paper cups in South Africa?",
+    answer:
+      "Yes. Pro Cups International manufactures paper cups locally in South Africa, helping us provide reliable production and supply to businesses across the country.",
+  },
+  {
+    question: "Can I print my own logo on the cups?",
+    answer:
+      "Absolutely. We offer custom printed paper cups for coffee shops, restaurants, franchises, wholesalers and corporate businesses.",
+  },
+  {
+    question: "Which cup sizes are available?",
+    answer:
+      "We currently manufacture 250ml and 350ml paper cups in a range of styles including ripple, double wall and custom printed options.",
+  },
+];
+
 export default function Home() {
   return (
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-white">
+      <main className="overflow-hidden bg-white">
 
-    {/* HERO */}
+        {/* =========================================================
+            HERO
+        ========================================================= */}
 
-<section className="bg-white">
-  <div className="mx-auto max-w-7xl px-6 py-16 lg:px-12 lg:py-24">
+        <section className="relative isolate bg-slate-950 text-white">
 
-    <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+          {/* Background decoration */}
 
-      {/* LEFT */}
+          <div className="absolute inset-0 -z-10 overflow-hidden">
+            <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-green-600/20 blur-3xl" />
+            <div className="absolute -bottom-40 right-0 h-[500px] w-[500px] rounded-full bg-green-500/10 blur-3xl" />
+            <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-900/10 blur-3xl" />
+          </div>
 
-      <div>
+          <div className="mx-auto max-w-7xl px-5 py-16 sm:px-6 sm:py-20 lg:px-12 lg:py-28">
 
-        <span className="inline-flex rounded-full bg-green-100 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-700">
-          Premium Paper Cup Manufacturer
-        </span>
+            <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
 
-        <h1 className="mt-6 text-4xl font-black leading-tight text-black sm:text-5xl lg:text-7xl">
-          Manufactured In
-          <span className="block text-green-700">
-            South Africa.
-          </span>
-        </h1>
+              {/* Hero copy */}
 
-        <p className="mt-8 max-w-2xl text-lg leading-8 text-slate-700">
-          Pro Cups International manufactures premium Ripple,
-          Double Wall and Custom Printed paper cups for cafés,
-          restaurants, franchises, wholesalers and corporate brands
-          across South Africa.
-        </p>
+              <div>
 
-        <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+                <div className="inline-flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/10 px-4 py-2 text-xs font-black uppercase tracking-[2px] text-green-300">
+                  <span className="h-2 w-2 rounded-full bg-green-400" />
+                  South African Manufacturer
+                </div>
 
-          <Link
-            href="/quote"
-            className="rounded-full bg-green-700 px-8 py-4 text-center font-semibold text-white transition hover:bg-green-800"
-          >
-            Request Quote
-          </Link>
+                <h1 className="mt-7 max-w-3xl text-5xl font-black leading-[0.98] tracking-tight sm:text-6xl lg:text-7xl xl:text-8xl">
+                  Cups that make
+                  <span className="block text-green-400">
+                    your brand stand out.
+                  </span>
+                </h1>
 
-          <Link
-            href="/products"
-            className="rounded-full border-2 border-green-700 px-8 py-4 text-center font-semibold text-green-700 transition hover:bg-green-700 hover:text-white"
-          >
-            View Products
-          </Link>
+                <p className="mt-7 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
+                  Premium ripple, double wall and custom printed
+                  paper cups manufactured in South Africa for
+                  cafés, restaurants, franchises, wholesalers and
+                  growing brands.
+                </p>
 
-        </div>
+                <div className="mt-9 flex flex-col gap-3 sm:flex-row">
 
-        <div className="mt-14 grid grid-cols-3 gap-6">
+                  <Link
+                    href="/custom-printing"
+                    className="group inline-flex min-h-14 items-center justify-center rounded-full bg-green-600 px-7 py-4 text-center font-black text-white shadow-xl shadow-green-950/30 transition duration-300 hover:-translate-y-1 hover:bg-green-500"
+                  >
+                    Request a Quote
+                    <span className="ml-3 transition-transform duration-300 group-hover:translate-x-1">
+                      →
+                    </span>
+                  </Link>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <Link
+                    href="/products"
+                    className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/20 bg-white/5 px-7 py-4 text-center font-black text-white backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white hover:text-slate-950"
+                  >
+                    Explore Products
+                  </Link>
 
-            <h2 className="text-3xl font-black text-green-700">
-              1000+
-            </h2>
+                </div>
 
-            <p className="mt-2 text-sm font-medium text-slate-700">
-              Minimum Order
-            </p>
+                {/* Trust points */}
+
+                <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-slate-300">
+
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs font-black text-white">
+                      ✓
+                    </span>
+                    From 1,000 cups
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs font-black text-white">
+                      ✓
+                    </span>
+                    Local manufacturing
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs font-black text-white">
+                      ✓
+                    </span>
+                    Custom printing
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              {/* Hero image */}
+
+              <div className="relative">
+
+                <div className="absolute -inset-5 rounded-[40px] bg-green-500/10 blur-2xl" />
+
+                <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/5 p-2 shadow-2xl">
+
+                  <Image
+                    src="/images/hero.jpg"
+                    alt="Pro Cups paper cups"
+                    width={800}
+                    height={800}
+                    priority
+                    className="h-auto w-full rounded-[26px] object-cover"
+                  />
+
+                  {/* Floating card */}
+
+                  <div className="absolute bottom-6 left-6 right-6 rounded-2xl border border-white/10 bg-slate-950/90 p-4 shadow-xl backdrop-blur-md sm:left-auto sm:max-w-xs">
+
+                    <div className="flex items-center gap-3">
+
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-600 text-xl">
+                        ✓
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-black text-white">
+                          Built for businesses
+                        </p>
+
+                        <p className="mt-1 text-xs leading-5 text-slate-400">
+                          From everyday supply to custom branded
+                          packaging.
+                        </p>
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            {/* Stats */}
+
+            <div className="mt-14 grid grid-cols-3 overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur sm:mt-20">
+
+              <div className="border-r border-white/10 px-4 py-6 text-center sm:px-8 sm:py-8">
+                <p className="text-2xl font-black text-green-400 sm:text-4xl">
+                  1,000+
+                </p>
+                <p className="mt-2 text-xs font-bold uppercase tracking-wider text-slate-400 sm:text-sm">
+                  Minimum Order
+                </p>
+              </div>
+
+              <div className="border-r border-white/10 px-4 py-6 text-center sm:px-8 sm:py-8">
+                <p className="text-2xl font-black text-green-400 sm:text-4xl">
+                  5
+                </p>
+                <p className="mt-2 text-xs font-bold uppercase tracking-wider text-slate-400 sm:text-sm">
+                  Cup Styles
+                </p>
+              </div>
+
+              <div className="px-4 py-6 text-center sm:px-8 sm:py-8">
+                <p className="text-2xl font-black text-green-400 sm:text-4xl">
+                  SA
+                </p>
+                <p className="mt-2 text-xs font-bold uppercase tracking-wider text-slate-400 sm:text-sm">
+                  Manufactured
+                </p>
+              </div>
+
+            </div>
 
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        </section>
 
-            <h2 className="text-3xl font-black text-green-700">
-              5
-            </h2>
 
-            <p className="mt-2 text-sm font-medium text-slate-700">
-              Cup Styles
-            </p>
+        {/* =========================================================
+            PRODUCT RANGE
+        ========================================================= */}
 
-          </div>
+        <section className="bg-slate-50 py-20 sm:py-24 lg:py-32">
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12">
 
-            <h2 className="text-3xl font-black text-green-700">
-              SA
-            </h2>
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
 
-            <p className="mt-2 text-sm font-medium text-slate-700">
-              Manufactured
-            </p>
+              <div className="max-w-3xl">
 
-          </div>
+                <span className="inline-flex rounded-full bg-green-100 px-4 py-2 text-xs font-black uppercase tracking-[2px] text-green-700">
+                  Our Product Range
+                </span>
 
-        </div>
+                <h2 className="mt-5 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                  Find the cup that
+                  <span className="block text-green-700">
+                    fits your brand.
+                  </span>
+                </h2>
 
-      </div>
+                <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+                  Choose from our range of ripple and double wall
+                  cups, or speak to us about creating a custom
+                  printed cup for your business.
+                </p>
 
-      {/* RIGHT */}
-
-      <div className="relative">
-
-        <div className="absolute -left-6 -top-6 hidden h-40 w-40 rounded-full bg-green-100 blur-3xl lg:block" />
-
-        <div className="absolute -bottom-6 -right-6 hidden h-40 w-40 rounded-full bg-green-50 blur-3xl lg:block" />
-
-        <Image
-          src="/images/hero.jpg"
-          alt="Pro Cups"
-          width={800}
-          height={800}
-          priority
-          className="w-full rounded-[32px] shadow-2xl"
-        />
-
-      </div>
-
-    </div>
-
-  </div>
-</section>
-
-   {/* PRODUCTS */}
-
-<section className="bg-slate-50 py-20 lg:py-28">
-
-  <div className="mx-auto max-w-7xl px-6 lg:px-12">
-
-    <div className="text-center">
-
-      <span className="inline-block rounded-full bg-green-100 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-700">
-        Product Range
-      </span>
-
-      <h2 className="mt-6 text-4xl font-black text-black sm:text-5xl">
-        Premium Paper Cups
-      </h2>
-
-      <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-700">
-        Manufactured in South Africa using premium food-grade paper for
-        cafés, restaurants, wholesalers, franchises and corporate brands.
-      </p>
-
-    </div>
-
-    <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-5">
-
-      {products.map((product) => (
-
-        <div
-          key={product.name}
-          className="group overflow-hidden rounded-3xl bg-white shadow-lg transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
-        >
-
-          <div className="overflow-hidden">
-
-            <Image
-              src={product.image}
-              alt={product.name}
-              width={500}
-              height={500}
-              className="h-64 w-full object-cover transition duration-500 group-hover:scale-110"
-            />
-
-          </div>
-
-          <div className="p-6">
-
-            <h3 className="text-2xl font-black text-black">
-              {product.name}
-            </h3>
-
-            <p className="mt-3 text-slate-600">
-              {product.size}
-            </p>
-
-            <div className="mt-6">
+              </div>
 
               <Link
                 href="/products"
-                className="block rounded-full bg-green-700 py-3 text-center font-semibold text-white transition hover:bg-green-800"
+                className="inline-flex shrink-0 items-center font-black text-green-700 transition hover:text-green-800"
               >
-                View Product
+                View the full range
+                <span className="ml-2">→</span>
+              </Link>
+
+            </div>
+
+
+            <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-5">
+
+              {products.map((product) => (
+                <Link
+                  key={product.name}
+                  href="/products"
+                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:border-green-200 hover:shadow-2xl"
+                >
+
+                  <div className="relative overflow-hidden">
+
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      width={500}
+                      height={500}
+                      className="h-64 w-full object-cover transition duration-700 group-hover:scale-105"
+                    />
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
+
+                    <div className="absolute bottom-4 right-4 translate-y-3 rounded-full bg-white px-4 py-2 text-xs font-black text-slate-950 opacity-0 shadow-lg transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                      View →
+                    </div>
+
+                  </div>
+
+                  <div className="p-5">
+
+                    <h3 className="text-xl font-black text-slate-950">
+                      {product.name}
+                    </h3>
+
+                    <p className="mt-2 text-sm font-medium text-slate-500">
+                      {product.size}
+                    </p>
+
+                    <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
+
+                      <span className="text-sm font-bold text-green-700">
+                        Explore
+                      </span>
+
+                      <span className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-green-700">
+                        →
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                </Link>
+              ))}
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        {/* =========================================================
+            WHY PRO CUPS
+        ========================================================= */}
+
+        <section className="bg-white py-20 sm:py-24 lg:py-32">
+
+          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12">
+
+            <div className="grid items-end gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+
+              <div>
+
+                <span className="inline-flex rounded-full bg-green-100 px-4 py-2 text-xs font-black uppercase tracking-[2px] text-green-700">
+                  Why Pro Cups
+                </span>
+
+                <h2 className="mt-5 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                  More than just
+                  <span className="block text-green-700">
+                    a paper cup.
+                  </span>
+                </h2>
+
+              </div>
+
+              <p className="max-w-2xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+                Your packaging is part of your brand. We combine
+                local manufacturing, modern production equipment
+                and careful quality control to help businesses
+                present their products professionally.
+              </p>
+
+            </div>
+
+
+            <div className="mt-14 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+
+              {[
+                {
+                  icon: "🏭",
+                  title: "Local Manufacturing",
+                  text: "Manufactured in South Africa with a focus on reliable supply and consistent quality.",
+                },
+                {
+                  icon: "🖨️",
+                  title: "Custom Printing",
+                  text: "Turn your branding into professional printed cups that customers see with every order.",
+                },
+                {
+                  icon: "📦",
+                  title: "Low MOQ",
+                  text: "Order from 1,000 cups, giving growing businesses access to professional packaging.",
+                },
+                {
+                  icon: "⭐",
+                  title: "Quality Focus",
+                  text: "Premium materials, modern equipment and controlled production processes.",
+                },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="group rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition duration-300 hover:-translate-y-2 hover:border-green-200 hover:shadow-xl"
+                >
+
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-100 text-2xl transition duration-300 group-hover:scale-110 group-hover:bg-green-600">
+                    {item.icon}
+                  </div>
+
+                  <h3 className="mt-6 text-xl font-black text-slate-950">
+                    {item.title}
+                  </h3>
+
+                  <p className="mt-3 leading-7 text-slate-600">
+                    {item.text}
+                  </p>
+
+                </div>
+              ))}
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        {/* =========================================================
+            CUSTOM PRINTING
+        ========================================================= */}
+
+        <section className="bg-slate-950 py-20 text-white sm:py-24 lg:py-32">
+
+          <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 sm:px-6 lg:grid-cols-2 lg:gap-20 lg:px-12">
+
+            <div className="relative order-2 lg:order-1">
+
+              <div className="absolute -inset-5 rounded-[40px] bg-green-500/10 blur-3xl" />
+
+              <div className="relative overflow-hidden rounded-[32px] border border-white/10">
+
+                <Image
+                  src="/images/custom-printing.jpg"
+                  alt="Custom printed Pro Cups paper cups"
+                  width={700}
+                  height={700}
+                  className="w-full object-cover transition duration-700 hover:scale-105"
+                />
+
+              </div>
+
+            </div>
+
+
+            <div className="order-1 lg:order-2">
+
+              <span className="inline-flex rounded-full border border-green-500/20 bg-green-500/10 px-4 py-2 text-xs font-black uppercase tracking-[2px] text-green-300">
+                Custom Printing
+              </span>
+
+              <h2 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
+                Put your brand
+                <span className="block text-green-400">
+                  in every hand.
+                </span>
+              </h2>
+
+              <p className="mt-6 text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
+                Create branded paper cups that make your business
+                instantly recognisable. Send us your artwork and
+                we'll guide you through the process from design
+                to production.
+              </p>
+
+
+              <div className="mt-8 space-y-4">
+
+                {[
+                  "High-resolution custom printing",
+                  "Professional print proof before production",
+                  "Reliable production process",
+                  "Minimum orders from 1,000 cups",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-start gap-3"
+                  >
+
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-600 text-xs font-black text-white">
+                      ✓
+                    </span>
+
+                    <span className="font-semibold text-slate-200">
+                      {item}
+                    </span>
+
+                  </div>
+                ))}
+
+              </div>
+
+
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+
+                <Link
+                  href="/custom-printing"
+                  className="inline-flex min-h-14 items-center justify-center rounded-full bg-green-600 px-7 py-4 font-black text-white transition hover:bg-green-500"
+                >
+                  Start Your Design
+                  <span className="ml-3">→</span>
+                </Link>
+
+                <Link
+                  href="/contact"
+                  className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/20 px-7 py-4 font-black text-white transition hover:bg-white hover:text-slate-950"
+                >
+                  Talk to Us
+                </Link>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        {/* =========================================================
+            PROCESS
+        ========================================================= */}
+
+        <section className="bg-slate-50 py-20 sm:py-24 lg:py-32">
+
+          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12">
+
+            <div className="mx-auto max-w-3xl text-center">
+
+              <span className="inline-flex rounded-full bg-green-100 px-4 py-2 text-xs font-black uppercase tracking-[2px] text-green-700">
+                How It Works
+              </span>
+
+              <h2 className="mt-5 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                From idea to
+                <span className="block text-green-700">
+                  finished cups.
+                </span>
+              </h2>
+
+              <p className="mt-5 text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+                We make the process straightforward, transparent
+                and easy to follow.
+              </p>
+
+            </div>
+
+
+            <div className="relative mt-14">
+
+              <div className="absolute left-[12.5%] right-[12.5%] top-9 hidden h-px bg-green-200 xl:block" />
+
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+
+                {[
+                  {
+                    number: "01",
+                    title: "Request",
+                    text: "Tell us what cups you need and submit your requirements.",
+                  },
+                  {
+                    number: "02",
+                    title: "Design & Proof",
+                    text: "Send your artwork and review your professional print proof.",
+                  },
+                  {
+                    number: "03",
+                    title: "Payment",
+                    text: "Accept your quotation and securely pay your invoice online.",
+                  },
+                  {
+                    number: "04",
+                    title: "Production",
+                    text: "Once payment is confirmed, your cups move into production.",
+                  },
+                ].map((step) => (
+                  <div
+                    key={step.number}
+                    className="relative rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"
+                  >
+
+                    <div className="relative z-10 flex h-18 w-18 items-center justify-center rounded-full bg-green-600 text-lg font-black text-white shadow-lg shadow-green-700/20">
+                      {step.number}
+                    </div>
+
+                    <h3 className="mt-6 text-2xl font-black text-slate-950">
+                      {step.title}
+                    </h3>
+
+                    <p className="mt-3 leading-7 text-slate-600">
+                      {step.text}
+                    </p>
+
+                  </div>
+                ))}
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        {/* =========================================================
+            FAQ
+        ========================================================= */}
+
+        <section className="bg-white py-20 sm:py-24 lg:py-32">
+
+          <div className="mx-auto max-w-5xl px-5 sm:px-6 lg:px-12">
+
+            <div className="text-center">
+
+              <span className="inline-flex rounded-full bg-green-100 px-4 py-2 text-xs font-black uppercase tracking-[2px] text-green-700">
+                Frequently Asked Questions
+              </span>
+
+              <h2 className="mt-5 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
+                Questions?
+                <span className="text-green-700">
+                  {" "}We've got answers.
+                </span>
+              </h2>
+
+            </div>
+
+
+            <div className="mt-12 space-y-4">
+
+              {faqs.map((faq) => (
+                <details
+                  key={faq.question}
+                  className="group rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-green-200 hover:shadow-md"
+                >
+
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 p-6 font-black text-slate-950 sm:p-7">
+
+                    <span className="text-base sm:text-lg">
+                      {faq.question}
+                    </span>
+
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-100 text-xl font-medium text-green-700 transition duration-300 group-open:rotate-45">
+                      +
+                    </span>
+
+                  </summary>
+
+                  <div className="px-6 pb-6 sm:px-7 sm:pb-7">
+
+                    <p className="max-w-3xl leading-7 text-slate-600">
+                      {faq.answer}
+                    </p>
+
+                  </div>
+
+                </details>
+              ))}
+
+            </div>
+
+
+            <div className="mt-10 text-center">
+
+              <Link
+                href="/contact"
+                className="font-black text-green-700 transition hover:text-green-800"
+              >
+                Still have a question? Contact us →
               </Link>
 
             </div>
 
           </div>
 
-        </div>
+        </section>
 
-      ))}
 
-    </div>
+        {/* =========================================================
+            FINAL CTA
+        ========================================================= */}
 
-  </div>
+        <section className="relative overflow-hidden bg-green-700 py-20 text-white sm:py-24 lg:py-32">
 
-</section>
+          <div className="absolute inset-0">
 
-    {/* WHY US */}
+            <div className="absolute -right-40 -top-40 h-[500px] w-[500px] rounded-full bg-white/10 blur-3xl" />
 
-<section className="bg-white py-20 lg:py-28">
-
-  <div className="mx-auto max-w-7xl px-6 lg:px-12">
-
-    <div className="text-center">
-
-      <span className="inline-block rounded-full bg-green-100 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-700">
-        Why Pro Cups
-      </span>
-
-      <h2 className="mt-6 text-4xl font-black text-black sm:text-5xl">
-        Why Businesses Choose Us
-      </h2>
-
-      <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-700">
-        We manufacture premium paper cups using high-quality food-grade
-        materials, modern production equipment and strict quality control
-        processes to ensure every cup meets professional standards.
-      </p>
-
-    </div>
-
-    <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
-
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:-translate-y-2 hover:shadow-xl">
-
-        <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">
-          🏭
-        </div>
-
-        <h3 className="text-2xl font-bold text-black">
-          South African Manufacturer
-        </h3>
-
-        <p className="mt-4 leading-7 text-slate-700">
-          Manufactured locally with reliable lead times and consistent
-          quality.
-        </p>
-
-      </div>
-
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:-translate-y-2 hover:shadow-xl">
-
-        <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">
-          🖨️
-        </div>
-
-        <h3 className="text-2xl font-bold text-black">
-          Custom Printing
-        </h3>
-
-        <p className="mt-4 leading-7 text-slate-700">
-          Full-colour branded paper cups printed with vibrant food-safe
-          inks.
-        </p>
-
-      </div>
-
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:-translate-y-2 hover:shadow-xl">
-
-        <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">
-          📦
-        </div>
-
-        <h3 className="text-2xl font-bold text-black">
-          Low MOQ
-        </h3>
-
-        <p className="mt-4 leading-7 text-slate-700">
-          Order from only 1,000 cups, making branded packaging affordable
-          for businesses of every size.
-        </p>
-
-      </div>
-
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:-translate-y-2 hover:shadow-xl">
-
-        <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">
-          ⭐
-        </div>
-
-        <h3 className="text-2xl font-bold text-black">
-          Premium Quality
-        </h3>
-
-        <p className="mt-4 leading-7 text-slate-700">
-          Manufactured using premium paper and strict quality control to
-          deliver a professional finish every time.
-        </p>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-{/* CUSTOM PRINTING */}
-
-<section className="bg-slate-50 py-20 lg:py-28">
-
-  <div className="mx-auto grid max-w-7xl items-center gap-16 px-6 lg:grid-cols-2 lg:px-12">
-
-    {/* IMAGE */}
-
-    <div className="relative">
-
-      <div className="absolute -left-6 -top-6 hidden h-44 w-44 rounded-full bg-green-100 blur-3xl lg:block"></div>
-
-      <Image
-        src="/images/custom-printing.jpg"
-        alt="Custom Printed Paper Cups"
-        width={700}
-        height={700}
-        className="w-full rounded-[32px] shadow-2xl"
-      />
-
-    </div>
-
-    {/* CONTENT */}
-
-    <div>
-
-      <span className="inline-block rounded-full bg-green-100 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-700">
-        Custom Printing
-      </span>
-
-      <h2 className="mt-6 text-4xl font-black text-black sm:text-5xl">
-        Showcase Your Brand On Every Cup
-      </h2>
-
-      <p className="mt-8 text-lg leading-8 text-slate-700">
-        We produce vibrant full-colour printed paper cups that help
-        cafés, restaurants, franchises and corporate businesses build
-        their brand with every coffee served.
-      </p>
-
-      <div className="mt-10 space-y-5">
-
-        <div className="flex items-start gap-4">
-
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-700 text-white">
-            ✓
-          </div>
-
-          <div>
-
-            <h3 className="font-bold text-black">
-              High Resolution Printing
-            </h3>
-
-            <p className="text-slate-600">
-              Sharp colours with excellent print quality.
-            </p>
+            <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-black/10 blur-3xl" />
 
           </div>
 
-        </div>
+          <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-12">
 
-        <div className="flex items-start gap-4">
+            <div className="grid items-center gap-12 lg:grid-cols-[1fr_auto]">
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-700 text-white">
-            ✓
-          </div>
+              <div>
 
-          <div>
+                <span className="inline-flex rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[2px] text-green-100">
+                  Ready to get started?
+                </span>
 
-            <h3 className="font-bold text-black">
-              Fast Production
-            </h3>
+                <h2 className="mt-6 max-w-4xl text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
+                  Let's put your brand
+                  <span className="block text-green-200">
+                    on the cup.
+                  </span>
+                </h2>
 
-            <p className="text-slate-600">
-              Reliable turnaround for businesses of all sizes.
-            </p>
+                <p className="mt-6 max-w-2xl text-base leading-7 text-green-50 sm:text-lg sm:leading-8">
+                  Tell us what you need and our team will help
+                  you choose the right cup, quantity and printing
+                  option for your business.
+                </p>
 
-          </div>
+              </div>
 
-        </div>
 
-        <div className="flex items-start gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-700 text-white">
-            ✓
-          </div>
+                <Link
+                  href="/custom-printing"
+                  className="inline-flex min-h-14 items-center justify-center rounded-full bg-white px-8 py-4 font-black text-green-700 shadow-xl transition hover:-translate-y-1 hover:bg-slate-50"
+                >
+                  Request a Quote
+                  <span className="ml-3">→</span>
+                </Link>
 
-          <div>
+                <Link
+                  href="/products"
+                  className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/30 px-8 py-4 font-black text-white transition hover:-translate-y-1 hover:bg-white/10"
+                >
+                  View Products
+                </Link>
 
-            <h3 className="font-bold text-black">
-              Food Grade Materials
-            </h3>
+              </div>
 
-            <p className="text-slate-600">
-              Manufactured using premium food-safe paper and inks.
-            </p>
-
-          </div>
-
-        </div>
-
-        <div className="flex items-start gap-4">
-
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-700 text-white">
-            ✓
-          </div>
-
-          <div>
-
-            <h3 className="font-bold text-black">
-              MOQ From 1,000 Cups
-            </h3>
-
-            <p className="text-slate-600">
-              Perfect for both small businesses and national brands.
-            </p>
+            </div>
 
           </div>
 
-        </div>
+        </section>
 
-      </div>
 
-      <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+        {/* =========================================================
+            FOOTER
+        ========================================================= */}
 
-        <Link
-          href="/custom-printing"
-          className="rounded-full bg-green-700 px-8 py-4 text-center font-semibold text-white transition hover:bg-green-800"
-        >
-          Start Your Design
-        </Link>
+        <Footer />
 
-        <Link
-          href="/contact"
-          className="rounded-full border-2 border-green-700 px-8 py-4 text-center font-semibold text-green-700 transition hover:bg-green-700 hover:text-white"
-        >
-          Contact Us
-        </Link>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-{/* MANUFACTURING PROCESS */}
-
-<section className="bg-white py-20 lg:py-28">
-
-  <div className="mx-auto max-w-7xl px-6 lg:px-12">
-
-    <div className="text-center">
-
-      <span className="inline-block rounded-full bg-green-100 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-700">
-        Manufacturing Process
-      </span>
-
-      <h2 className="mt-6 text-4xl font-black text-black sm:text-5xl">
-        From Artwork To Delivery
-      </h2>
-
-      <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-700">
-        Every order is professionally managed from your initial artwork
-        through manufacturing, quality control and final delivery.
-      </p>
-
-    </div>
-
-    <div className="mt-20 grid gap-8 md:grid-cols-2 xl:grid-cols-4">
-
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:-translate-y-2 hover:shadow-xl">
-
-        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-700 text-2xl font-black text-white">
-          1
-        </div>
-
-        <h3 className="text-2xl font-bold text-black">
-          Design
-        </h3>
-
-        <p className="mt-4 leading-7 text-slate-700">
-          Send us your logo or artwork and our team will prepare your
-          print-ready cup design.
-        </p>
-
-      </div>
-
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:-translate-y-2 hover:shadow-xl">
-
-        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-700 text-2xl font-black text-white">
-          2
-        </div>
-
-        <h3 className="text-2xl font-bold text-black">
-          Approval
-        </h3>
-
-        <p className="mt-4 leading-7 text-slate-700">
-          You'll receive a digital proof for approval before any cups go
-          into production.
-        </p>
-
-      </div>
-
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:-translate-y-2 hover:shadow-xl">
-
-        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-700 text-2xl font-black text-white">
-          3
-        </div>
-
-        <h3 className="text-2xl font-bold text-black">
-          Production
-        </h3>
-
-        <p className="mt-4 leading-7 text-slate-700">
-          Your cups are manufactured using premium food-grade materials
-          and modern production equipment.
-        </p>
-
-      </div>
-
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:-translate-y-2 hover:shadow-xl">
-
-        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-700 text-2xl font-black text-white">
-          4
-        </div>
-
-        <h3 className="text-2xl font-bold text-black">
-          Delivery
-        </h3>
-
-        <p className="mt-4 leading-7 text-slate-700">
-          Orders are securely packed and delivered throughout South
-          Africa.
-        </p>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-{/* FAQ */}
-
-<section className="bg-slate-50 py-20 lg:py-28">
-
-  <div className="mx-auto max-w-5xl px-6 lg:px-12">
-
-    <div className="text-center">
-
-      <span className="inline-block rounded-full bg-green-100 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-700">
-        Frequently Asked Questions
-      </span>
-
-      <h2 className="mt-6 text-4xl font-black text-black sm:text-5xl">
-        Paper Cup FAQs
-      </h2>
-
-      <p className="mt-6 text-lg text-slate-700">
-        Answers to some of the most common questions about our paper cups and custom printing services.
-      </p>
-
-    </div>
-
-    <div className="mt-14 space-y-6">
-
-      <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
-        <h3 className="text-2xl font-bold text-black">
-          What is the minimum order quantity?
-        </h3>
-
-        <p className="mt-4 text-slate-700 leading-8">
-          Our minimum order quantity is just 1,000 paper cups, making custom printed cups affordable for both small businesses and large national brands.
-        </p>
-      </div>
-
-      <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
-        <h3 className="text-2xl font-bold text-black">
-          Do you manufacture paper cups in South Africa?
-        </h3>
-
-        <p className="mt-4 text-slate-700 leading-8">
-          Yes. Pro Cups International manufactures premium paper cups locally in South Africa, allowing for reliable lead times and consistent quality.
-        </p>
-      </div>
-
-      <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
-        <h3 className="text-2xl font-bold text-black">
-          Can I print my own logo on the cups?
-        </h3>
-
-        <p className="mt-4 text-slate-700 leading-8">
-          Absolutely. We specialise in high-quality custom printed paper cups for coffee shops, restaurants, franchises and corporate businesses.
-        </p>
-      </div>
-
-      <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
-        <h3 className="text-2xl font-bold text-black">
-          Which cup sizes are available?
-        </h3>
-
-        <p className="mt-4 text-slate-700 leading-8">
-          We currently manufacture 250ml and 350ml paper cups in a variety of styles including ripple, double wall and custom printed options.
-        </p>
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-{/* FINAL CTA */}
-
-<section className="relative overflow-hidden bg-slate-900 py-24 text-white">
-
-  <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-800 to-green-900 opacity-90"></div>
-
-  <div className="relative mx-auto max-w-7xl px-6 lg:px-12">
-
-    <div className="grid items-center gap-16 lg:grid-cols-2">
-
-      <div>
-
-        <span className="inline-block rounded-full bg-green-600/20 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-300">
-          Pro Cups International
-        </span>
-
-        <h2 className="mt-6 text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
-          Premium Paper Cups
-          <br />
-          Manufactured
-          <span className="text-green-400">
-            {" "}In South Africa
-          </span>
-        </h2>
-
-        <p className="mt-8 max-w-2xl text-lg leading-8 text-slate-300">
-          We manufacture premium ripple cups, double wall cups and custom
-          printed paper cups for coffee shops, restaurants, franchises,
-          wholesalers and corporate businesses throughout South Africa.
-        </p>
-
-        <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-
-          <Link
-            href="/quote"
-            className="rounded-full bg-green-600 px-8 py-4 text-center font-semibold text-white transition hover:bg-green-700"
-          >
-            Request Quote
-          </Link>
-
-          <Link
-            href="/products"
-            className="rounded-full border border-white/30 px-8 py-4 text-center font-semibold text-white transition hover:bg-white hover:text-black"
-          >
-            Browse Products
-          </Link>
-
-        </div>
-
-      </div>
-
-      <div className="grid grid-cols-2 gap-6">
-
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur">
-
-          <h3 className="text-5xl font-black text-green-400">
-            1000+
-          </h3>
-
-          <p className="mt-3 text-slate-300">
-            Minimum Order Quantity
-          </p>
-
-        </div>
-
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur">
-
-          <h3 className="text-5xl font-black text-green-400">
-            5
-          </h3>
-
-          <p className="mt-3 text-slate-300">
-            Premium Cup Styles
-          </p>
-
-        </div>
-
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur">
-
-          <h3 className="text-5xl font-black text-green-400">
-            SA
-          </h3>
-
-          <p className="mt-3 text-slate-300">
-            Manufactured Locally
-          </p>
-
-        </div>
-
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur">
-
-          <h3 className="text-5xl font-black text-green-400">
-            100%
-          </h3>
-
-          <p className="mt-3 text-slate-300">
-            Food Grade Materials
-          </p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-
-{/* FOOTER */}
-
-<footer className="bg-black text-white">
-
-  <div className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-4 lg:px-12">
-
-    <div>
-
-      <h3 className="text-3xl font-black">
-        <span className="text-white">
-          Pro
-        </span>
-        <span className="text-green-500">
-          Cups
-        </span>
-      </h3>
-
-      <p className="mt-6 leading-7 text-slate-400">
-        Premium paper cup manufacturer supplying businesses throughout
-        South Africa.
-      </p>
-
-    </div>
-
-    <div>
-
-      <h4 className="mb-5 text-xl font-bold">
-        Products
-      </h4>
-
-      <ul className="space-y-3 text-slate-400">
-
-        <li>
-          <Link href="/products">
-            Ripple Cups
-          </Link>
-        </li>
-
-        <li>
-          <Link href="/products">
-            Double Wall Cups
-          </Link>
-        </li>
-
-        <li>
-          <Link href="/custom-printing">
-            Custom Printing
-          </Link>
-        </li>
-
-      </ul>
-
-    </div>
-
-    <div>
-
-      <h4 className="mb-5 text-xl font-bold">
-        Company
-      </h4>
-
-      <ul className="space-y-3 text-slate-400">
-
-        <li>
-          <Link href="/">
-            Home
-          </Link>
-        </li>
-
-        <li>
-          <Link href="/gallery">
-            Gallery
-          </Link>
-        </li>
-
-        <li>
-          <Link href="/contact">
-            Contact
-          </Link>
-        </li>
-
-      </ul>
-
-    </div>
-
-    <div>
-
-      <h4 className="mb-5 text-xl font-bold">
-        Contact
-      </h4>
-
-      <p className="text-slate-400">
-        Durban
-        <br />
-        South Africa
-      </p>
-
-      <p className="mt-5 text-slate-400">
-        support@smartpacktrading.co.za
-      </p>
-
-    </div>
-
-  </div>
-
-  <div className="border-t border-white/10 py-6 text-center text-slate-500">
-
-    © {new Date().getFullYear()} Pro Cups International.
-    All Rights Reserved.
-
-  </div>
-
-  <div className="py-6 text-center text-slate-500">
-  Pro Cups International is a division of Smart Pack Trading (Pty) Ltd. 
-  </div>
-
-</footer>
-
-</main>
-
-    
+      </main>
     </>
   );
 }
