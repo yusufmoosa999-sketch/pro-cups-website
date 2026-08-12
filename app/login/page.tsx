@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
 
-
 export default function LoginPage() {
   const supabase = createClient();
   const router = useRouter();
@@ -53,15 +52,20 @@ export default function LoginPage() {
 
       <main className="min-h-screen bg-slate-50">
 
-        <section className="bg-slate-900 py-16 text-white lg:py-24">
+        {/* HERO */}
 
-          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12">
+        <section className="relative overflow-hidden bg-slate-950 text-white">
 
-            <span className="inline-block rounded-full bg-green-700/20 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-300">
+          <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-green-600/20 blur-3xl" />
+          <div className="absolute -left-32 bottom-0 h-72 w-72 rounded-full bg-green-500/10 blur-3xl" />
+
+          <div className="relative mx-auto max-w-7xl px-5 py-16 sm:px-6 lg:px-12 lg:py-24">
+
+            <span className="inline-flex rounded-full border border-green-400/20 bg-green-500/10 px-4 py-2 text-sm font-bold uppercase tracking-[0.2em] text-green-300">
               Customer Portal
             </span>
 
-            <h1 className="mt-6 text-4xl font-black sm:text-5xl lg:text-6xl">
+            <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
               Welcome Back
             </h1>
 
@@ -71,99 +75,174 @@ export default function LoginPage() {
             </p>
 
           </div>
-
         </section>
 
-        <section className="py-16 lg:py-24">
+        {/* LOGIN */}
+
+        <section className="relative py-16 lg:py-24">
 
           <div className="mx-auto max-w-md px-5 sm:px-6">
 
-            <div className="rounded-[32px] bg-white p-8 shadow-xl lg:p-10">
+            {/* LOGIN CARD */}
 
-              <h2 className="text-center text-3xl font-black text-black">
-                Login
-              </h2>
+            <div className="rounded-[32px] border border-slate-200 bg-white p-8 shadow-[0_20px_60px_rgba(15,23,42,0.10)] sm:p-10">
 
-              <p className="mt-3 text-center text-slate-600">
-                Enter your email address and password below.
-              </p>
+              <div className="text-center">
+
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-green-700 text-2xl font-black text-white shadow-lg shadow-green-700/20">
+                  P
+                </div>
+
+                <h2 className="mt-6 text-3xl font-black tracking-tight text-slate-950">
+                  Login
+                </h2>
+
+                <p className="mt-3 text-base leading-6 text-slate-600">
+                  Enter your email address and password below.
+                </p>
+
+              </div>
 
               <form
                 onSubmit={signIn}
                 className="mt-10 space-y-6"
               >
 
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
-                  required
-                />
+                {/* EMAIL */}
 
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
-                  required
-                />
+                <div>
+
+                  <label
+                    htmlFor="email"
+                    className="mb-2 block text-sm font-bold text-slate-900"
+                  >
+                    Email Address
+                  </label>
+
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 text-base font-medium text-slate-950 placeholder:text-slate-500 outline-none transition duration-200 focus:border-green-600 focus:ring-4 focus:ring-green-600/10"
+                    required
+                  />
+
+                </div>
+
+                {/* PASSWORD */}
+
+                <div>
+
+                  <label
+                    htmlFor="password"
+                    className="mb-2 block text-sm font-bold text-slate-900"
+                  >
+                    Password
+                  </label>
+
+                  <input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 text-base font-medium text-slate-950 placeholder:text-slate-500 outline-none transition duration-200 focus:border-green-600 focus:ring-4 focus:ring-green-600/10"
+                    required
+                  />
+
+                </div>
+
+                {/* ERROR */}
+
                 {error && (
-                  <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+                  <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold leading-6 text-red-700">
                     {error}
                   </div>
                 )}
 
+                {/* BUTTON */}
+
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-full bg-green-700 py-4 text-lg font-bold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-2xl bg-green-700 py-4 text-base font-bold text-white shadow-lg shadow-green-700/20 transition duration-200 hover:-translate-y-0.5 hover:bg-green-800 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
                 >
                   {loading ? "Signing In..." : "Sign In"}
                 </button>
 
               </form>
 
-              <div className="mt-8 flex flex-col gap-4 text-center">
+              {/* LINKS */}
+
+              <div className="mt-8 space-y-5 text-center">
 
                 <Link
                   href="/forgot-password"
-                  className="font-medium text-green-700 transition hover:text-green-800"
+                  className="block font-bold text-green-700 transition hover:text-green-800 hover:underline"
                 >
                   Forgot your password?
                 </Link>
 
-                <div className="text-slate-600">
+                <div className="border-t border-slate-200 pt-5 text-sm text-slate-600">
+
                   Don't have an account?{" "}
+
                   <Link
                     href="/signup"
-                    className="font-bold text-green-700 hover:text-green-800"
+                    className="font-bold text-green-700 transition hover:text-green-800 hover:underline"
                   >
                     Create Account
                   </Link>
+
                 </div>
 
               </div>
 
             </div>
 
-            <div className="mt-8 rounded-[28px] bg-white p-6 shadow-lg">
+            {/* BENEFITS */}
 
-              <h3 className="text-xl font-black text-black">
-                Why create an account?
+            <div className="mt-8 rounded-[28px] border border-slate-200 bg-white p-7 shadow-lg">
+
+              <h3 className="text-xl font-black text-slate-950">
+                Your Pro Cups account
               </h3>
 
-              <ul className="mt-5 space-y-3 text-slate-700">
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Everything you need to manage your orders in one place.
+              </p>
 
-                <li>✓ View your quote requests</li>
+              <ul className="mt-6 space-y-4">
 
-                <li>✓ Track quote progress</li>
+                <li className="flex items-center gap-3 text-sm font-semibold text-slate-800">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 font-bold text-green-700">
+                    ✓
+                  </span>
+                  View your quote requests
+                </li>
 
-                <li>✓ Manage artwork uploads</li>
+                <li className="flex items-center gap-3 text-sm font-semibold text-slate-800">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 font-bold text-green-700">
+                    ✓
+                  </span>
+                  Track quote progress
+                </li>
 
-                <li>✓ Faster future orders</li>
+                <li className="flex items-center gap-3 text-sm font-semibold text-slate-800">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 font-bold text-green-700">
+                    ✓
+                  </span>
+                  Manage artwork uploads
+                </li>
+
+                <li className="flex items-center gap-3 text-sm font-semibold text-slate-800">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 font-bold text-green-700">
+                    ✓
+                  </span>
+                  Faster future orders
+                </li>
 
               </ul>
 
@@ -176,7 +255,6 @@ export default function LoginPage() {
         <Footer />
 
       </main>
-
     </>
   );
 }
