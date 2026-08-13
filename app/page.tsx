@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
 
+
 export const metadata: Metadata = {
   title: "Pro Cups International | Premium Paper Cups South Africa",
   description:
@@ -348,7 +349,9 @@ export default function Home() {
           </div>
 
         </section>
-
+        {/* =========================================================
+    INTERACTIVE CUP STUDIO
+========================================================= */}
 
         {/* =========================================================
             WHY PRO CUPS
