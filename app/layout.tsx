@@ -71,6 +71,22 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
 
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-T5C6PGER6L"
+          strategy="afterInteractive"
+        />
+
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){window.dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-T5C6PGER6L');
+          `}
+        </Script>
+
+        {/* Organization Schema */}
         <Script
           id="organization-schema"
           type="application/ld+json"
