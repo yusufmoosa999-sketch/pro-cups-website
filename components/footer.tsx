@@ -54,7 +54,7 @@ export default function Footer() {
 
             <p>Durban, South Africa</p>
 
-            <p>sales@procupsinternational.com</p>
+            <p>info@procupsinternational.com</p>
 
             <p>www.procupsinternational.com</p>
 
@@ -70,7 +70,7 @@ export default function Footer() {
 
           <p>© 2026 Pro Cups International</p>
 
-          <p>Manufactured in South Africa 🇿🇦</p>
+          <p>Pro Cups International is a division of Smart Pack Trading</p>
 
         </div>
 
