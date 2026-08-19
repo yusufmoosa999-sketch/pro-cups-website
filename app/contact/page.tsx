@@ -173,7 +173,7 @@ export default function ContactPage() {
                 </p>
 
                 <Link
-                  href="mailto:yusuf@smartpacktrading.co.za"
+                  href="mailto:info@procupsinternational.com"
                   className="mt-8 block rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
                 >
                   Send Email
