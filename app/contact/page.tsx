@@ -1,15 +1,68 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Contact Us",
-  description:
-    "Contact Pro Cups International for paper cup quotations, custom printing and product enquiries.",
-};
 
 export default function ContactPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    setLoading(true);
+    setSuccess(false);
+    setError("");
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          message,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error || "Unable to send your enquiry."
+        );
+      }
+
+      setSuccess(true);
+
+      setName("");
+      setEmail("");
+      setPhone("");
+      setMessage("");
+    } catch (err) {
+      console.error("Contact form error:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       <Navbar />
@@ -51,6 +104,8 @@ export default function ContactPage() {
 
             <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
 
+              {/* PHONE */}
+
               <div className="rounded-[30px] bg-white p-8 shadow-lg">
 
                 <div className="text-5xl">
@@ -66,13 +121,15 @@ export default function ContactPage() {
                 </p>
 
                 <Link
-                  href="tel:+27310000000"
+                  href="tel:+27762538968"
                   className="mt-8 block rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
                 >
                   Call Now
                 </Link>
 
               </div>
+
+              {/* WHATSAPP */}
 
               <div className="rounded-[30px] bg-white p-8 shadow-lg">
 
@@ -89,13 +146,17 @@ export default function ContactPage() {
                 </p>
 
                 <Link
-                  href="https://wa.me/27XXXXXXXXX"
+                  href="https://wa.me/27762538968"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="mt-8 block rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
                 >
                   Start Chat
                 </Link>
 
               </div>
+
+              {/* EMAIL */}
 
               <div className="rounded-[30px] bg-white p-8 shadow-lg">
 
@@ -112,13 +173,15 @@ export default function ContactPage() {
                 </p>
 
                 <Link
-                  href="mailto:sales@procupsinternational.com"
+                  href="mailto:yusuf@smartpacktrading.co.za"
                   className="mt-8 block rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
                 >
                   Send Email
                 </Link>
 
               </div>
+
+              {/* LOCATION */}
 
               <div className="rounded-[30px] bg-white p-8 shadow-lg">
 
@@ -136,7 +199,16 @@ export default function ContactPage() {
                   South Africa
                 </p>
 
-                <button className="mt-8 w-full rounded-full border-2 border-green-700 py-4 font-bold text-green-700 transition hover:bg-green-700 hover:text-white">
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.open(
+                      "https://www.google.com/maps/search/?api=1&query=Durban%2C%20South%20Africa",
+                      "_blank"
+                    )
+                  }
+                  className="mt-8 w-full rounded-full border-2 border-green-700 py-4 font-bold text-green-700 transition hover:bg-green-700 hover:text-white"
+                >
                   View Map
                 </button>
 
@@ -147,7 +219,8 @@ export default function ContactPage() {
           </div>
 
         </section>
-                {/* CONTACT FORM */}
+
+        {/* CONTACT FORM */}
 
         <section className="bg-slate-50 py-16 lg:py-24">
 
@@ -172,37 +245,137 @@ export default function ContactPage() {
                   will get back to you as soon as possible.
                 </p>
 
-                <form className="mt-10 space-y-6">
+                <form
+                  onSubmit={handleSubmit}
+                  className="mt-10 space-y-6"
+                >
 
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
-                  />
+                  {/* NAME */}
 
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
-                  />
+                  <div>
 
-                  <input
-                    type="tel"
-                    placeholder="Phone Number"
-                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
-                  />
+                    <label
+                      htmlFor="name"
+                      className="mb-2 block text-sm font-bold text-slate-800"
+                    >
+                      Full Name
+                    </label>
 
-                  <textarea
-                    rows={6}
-                    placeholder="Tell us what you need..."
-                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
-                  />
+                    <input
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={(e) =>
+                        setName(e.target.value)
+                      }
+                      placeholder="Enter your full name"
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-700/10"
+                      required
+                    />
+
+                  </div>
+
+                  {/* EMAIL */}
+
+                  <div>
+
+                    <label
+                      htmlFor="email"
+                      className="mb-2 block text-sm font-bold text-slate-800"
+                    >
+                      Email Address
+                    </label>
+
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) =>
+                        setEmail(e.target.value)
+                      }
+                      placeholder="you@example.com"
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-700/10"
+                      required
+                    />
+
+                  </div>
+
+                  {/* PHONE */}
+
+                  <div>
+
+                    <label
+                      htmlFor="phone"
+                      className="mb-2 block text-sm font-bold text-slate-800"
+                    >
+                      Phone Number
+                    </label>
+
+                    <input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) =>
+                        setPhone(e.target.value)
+                      }
+                      placeholder="+27..."
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-700/10"
+                    />
+
+                  </div>
+
+                  {/* MESSAGE */}
+
+                  <div>
+
+                    <label
+                      htmlFor="message"
+                      className="mb-2 block text-sm font-bold text-slate-800"
+                    >
+                      Your Enquiry
+                    </label>
+
+                    <textarea
+                      id="message"
+                      rows={6}
+                      value={message}
+                      onChange={(e) =>
+                        setMessage(e.target.value)
+                      }
+                      placeholder="Tell us what you need..."
+                      className="w-full resize-none rounded-2xl border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-700/10"
+                      required
+                    />
+
+                  </div>
+
+                  {/* ERROR */}
+
+                  {error && (
+                    <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+                      {error}
+                    </div>
+                  )}
+
+                  {/* SUCCESS */}
+
+                  {success && (
+                    <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-800">
+                      Your enquiry has been sent successfully. We'll
+                      get back to you as soon as possible.
+                    </div>
+                  )}
+
+                  {/* SUBMIT */}
 
                   <button
                     type="submit"
-                    className="w-full rounded-full bg-green-700 py-4 text-lg font-bold text-white transition hover:bg-green-800"
+                    disabled={loading}
+                    className="w-full rounded-full bg-green-700 py-4 text-lg font-bold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    Send Enquiry
+                    {loading
+                      ? "Sending Enquiry..."
+                      : "Send Enquiry"}
                   </button>
 
                 </form>
@@ -211,7 +384,7 @@ export default function ContactPage() {
 
               {/* MAP */}
 
-              <div className="rounded-[32px] overflow-hidden shadow-xl">
+              <div className="overflow-hidden rounded-[32px] shadow-xl">
 
                 <iframe
                   src="https://www.google.com/maps?q=Durban,South%20Africa&output=embed"
@@ -232,7 +405,7 @@ export default function ContactPage() {
 
         <section className="bg-slate-900 py-20 text-white">
 
-          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12 text-center">
+          <div className="mx-auto max-w-7xl px-5 text-center sm:px-6 lg:px-12">
 
             <span className="inline-block rounded-full bg-green-700/20 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-300">
               Pro Cups International
@@ -276,7 +449,6 @@ export default function ContactPage() {
         <Footer />
 
       </main>
-
     </>
   );
 }
