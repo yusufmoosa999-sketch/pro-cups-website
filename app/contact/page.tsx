@@ -1,15 +1,69 @@
-import Link from "next/link";
-import Footer from "@/components/footer";
-import Navbar from "@/components/Navbar";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Contact Us",
-  description:
-    "Contact Pro Cups International for paper cup quotations, custom printing and product enquiries.",
-};
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/footer";
+import type { Metadata } from "next";
+import { useState } from "react";
 
 export default function ContactPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    setLoading(true);
+    setSuccess("");
+    setError("");
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          message,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error || "Unable to send your enquiry. Please try again."
+        );
+      }
+
+      setSuccess(
+        "Your enquiry has been sent successfully. We will get back to you as soon as possible."
+      );
+
+      setName("");
+      setEmail("");
+      setPhone("");
+      setMessage("");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to send your enquiry. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       <Navbar />
@@ -255,48 +309,64 @@ export default function ContactPage() {
                 </p>
 
                 <form
-                  action="/api/contact"
-                  method="POST"
+                  onSubmit={handleSubmit}
                   className="mt-10 space-y-6"
                 >
 
                   <input
                     type="text"
-                    name="name"
                     placeholder="Full Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
                     required
                   />
 
                   <input
                     type="email"
-                    name="email"
                     placeholder="Email Address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
                     required
                   />
 
                   <input
                     type="tel"
-                    name="phone"
                     placeholder="Phone Number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
                     required
                   />
 
                   <textarea
-                    name="message"
                     rows={6}
                     placeholder="Tell us what you need..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
                     className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
                     required
                   />
 
+                  {success && (
+                    <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-green-700">
+                      {success}
+                    </div>
+                  )}
+
+                  {error && (
+                    <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+                      {error}
+                    </div>
+                  )}
+
                   <button
                     type="submit"
-                    className="w-full rounded-full bg-green-700 py-4 text-lg font-bold text-white transition hover:bg-green-800"
+                    disabled={loading}
+                    className="w-full rounded-full bg-green-700 py-4 text-lg font-bold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    Send Enquiry
+                    {loading ? "Sending..." : "Send Enquiry"}
                   </button>
 
                 </form>
@@ -373,7 +443,6 @@ export default function ContactPage() {
         <Footer />
 
       </main>
-
     </>
   );
 }
