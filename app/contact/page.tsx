@@ -1,73 +1,15 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
+import Navbar from "@/components/Navbar";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contact Us",
+  description:
+    "Contact Pro Cups International for paper cup quotations, custom printing and product enquiries.",
+};
 
 export default function ContactPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
-
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState("");
-
-  const [showCallOptions, setShowCallOptions] = useState(false);
-  const [showWhatsappOptions, setShowWhatsappOptions] = useState(false);
-
-  async function handleSubmit(
-    e: React.FormEvent<HTMLFormElement>
-  ) {
-    e.preventDefault();
-
-    setLoading(true);
-    setSuccess(false);
-    setError("");
-
-    try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          phone,
-          message,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.error || "Unable to send your enquiry."
-        );
-      }
-
-      setSuccess(true);
-
-      setName("");
-      setEmail("");
-      setPhone("");
-      setMessage("");
-    } catch (err) {
-      console.error("Contact form error:", err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <>
       <Navbar />
@@ -101,6 +43,7 @@ export default function ContactPage() {
 
         </section>
 
+
         {/* CONTACT CARDS */}
 
         <section className="py-16 lg:py-24">
@@ -109,9 +52,10 @@ export default function ContactPage() {
 
             <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
 
+
               {/* CALL US */}
 
-              <div className="relative rounded-[30px] bg-white p-8 shadow-lg">
+              <div className="rounded-[30px] bg-white p-8 shadow-lg">
 
                 <div className="text-5xl">
                   📞
@@ -125,63 +69,50 @@ export default function ContactPage() {
                   Speak directly to our sales team.
                 </p>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowCallOptions(!showCallOptions)
-                  }
-                  className="mt-8 w-full rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
-                >
-                  {showCallOptions
-                    ? "Close Options"
-                    : "Choose Who to Call"}
-                </button>
+                <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
 
-                {showCallOptions && (
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                  <a
+                    href="tel:+27762538968"
+                    className="block border-b border-slate-200 p-4 transition hover:bg-green-50"
+                  >
+                    <div className="font-bold text-slate-900">
+                      Yusuf
+                    </div>
 
-                    <a
-                      href="tel:+27762538968"
-                      className="block border-b border-slate-200 p-4 transition hover:bg-green-50"
-                    >
-                      <div className="font-bold text-slate-900">
-                        Yusuf
-                      </div>
+                    <div className="mt-1 text-sm text-slate-500">
+                      +27 76 253 8968
+                    </div>
 
-                      <div className="mt-1 text-sm text-slate-500">
-                        +27 76 253 8968
-                      </div>
+                    <div className="mt-2 text-sm font-bold text-green-700">
+                      Call Yusuf →
+                    </div>
+                  </a>
 
-                      <div className="mt-2 text-sm font-bold text-green-700">
-                        Call Yusuf →
-                      </div>
-                    </a>
+                  <a
+                    href="tel:+27716772314"
+                    className="block p-4 transition hover:bg-green-50"
+                  >
+                    <div className="font-bold text-slate-900">
+                      Muhummad
+                    </div>
 
-                    <a
-                      href="tel:+27716772314"
-                      className="block p-4 transition hover:bg-green-50"
-                    >
-                      <div className="font-bold text-slate-900">
-                        Muhummad
-                      </div>
+                    <div className="mt-1 text-sm text-slate-500">
+                      +27 71 677 2314
+                    </div>
 
-                      <div className="mt-1 text-sm text-slate-500">
-                        +27 71 677 2314
-                      </div>
+                    <div className="mt-2 text-sm font-bold text-green-700">
+                      Call Muhummad →
+                    </div>
+                  </a>
 
-                      <div className="mt-2 text-sm font-bold text-green-700">
-                        Call Muhummad →
-                      </div>
-                    </a>
-
-                  </div>
-                )}
+                </div>
 
               </div>
 
+
               {/* WHATSAPP */}
 
-              <div className="relative rounded-[30px] bg-white p-8 shadow-lg">
+              <div className="rounded-[30px] bg-white p-8 shadow-lg">
 
                 <div className="text-5xl">
                   💬
@@ -195,65 +126,50 @@ export default function ContactPage() {
                   Chat with our sales team instantly.
                 </p>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowWhatsappOptions(
-                      !showWhatsappOptions
-                    )
-                  }
-                  className="mt-8 w-full rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
-                >
-                  {showWhatsappOptions
-                    ? "Close Options"
-                    : "Choose WhatsApp"}
-                </button>
+                <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
 
-                {showWhatsappOptions && (
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                  <a
+                    href="https://wa.me/27762538968"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block border-b border-slate-200 p-4 transition hover:bg-green-50"
+                  >
+                    <div className="font-bold text-slate-900">
+                      Yusuf
+                    </div>
 
-                    <a
-                      href="https://wa.me/27762538968"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block border-b border-slate-200 p-4 transition hover:bg-green-50"
-                    >
-                      <div className="font-bold text-slate-900">
-                        Yusuf
-                      </div>
+                    <div className="mt-1 text-sm text-slate-500">
+                      +27 76 253 8968
+                    </div>
 
-                      <div className="mt-1 text-sm text-slate-500">
-                        +27 76 253 8968
-                      </div>
+                    <div className="mt-2 text-sm font-bold text-green-700">
+                      WhatsApp Yusuf →
+                    </div>
+                  </a>
 
-                      <div className="mt-2 text-sm font-bold text-green-700">
-                        WhatsApp Yusuf →
-                      </div>
-                    </a>
+                  <a
+                    href="https://wa.me/27716772314"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-4 transition hover:bg-green-50"
+                  >
+                    <div className="font-bold text-slate-900">
+                      Muhummad
+                    </div>
 
-                    <a
-                      href="https://wa.me/27716772314"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block p-4 transition hover:bg-green-50"
-                    >
-                      <div className="font-bold text-slate-900">
-                        Muhummad
-                      </div>
+                    <div className="mt-1 text-sm text-slate-500">
+                      +27 71 677 2314
+                    </div>
 
-                      <div className="mt-1 text-sm text-slate-500">
-                        +27 71 677 2314
-                      </div>
+                    <div className="mt-2 text-sm font-bold text-green-700">
+                      WhatsApp Muhummad →
+                    </div>
+                  </a>
 
-                      <div className="mt-2 text-sm font-bold text-green-700">
-                        WhatsApp Muhummad →
-                      </div>
-                    </a>
-
-                  </div>
-                )}
+                </div>
 
               </div>
+
 
               {/* EMAIL */}
 
@@ -280,6 +196,7 @@ export default function ContactPage() {
 
               </div>
 
+
               {/* LOCATION */}
 
               <div className="rounded-[30px] bg-white p-8 shadow-lg">
@@ -298,16 +215,7 @@ export default function ContactPage() {
                   South Africa
                 </p>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    window.open(
-                      "https://www.google.com/maps/search/?api=1&query=Durban%2C%20South%20Africa",
-                      "_blank"
-                    )
-                  }
-                  className="mt-8 w-full rounded-full border-2 border-green-700 py-4 font-bold text-green-700 transition hover:bg-green-700 hover:text-white"
-                >
+                <button className="mt-8 w-full rounded-full border-2 border-green-700 py-4 font-bold text-green-700 transition hover:bg-green-700 hover:text-white">
                   View Map
                 </button>
 
@@ -319,6 +227,7 @@ export default function ContactPage() {
 
         </section>
 
+
         {/* CONTACT FORM */}
 
         <section className="bg-slate-50 py-16 lg:py-24">
@@ -326,6 +235,7 @@ export default function ContactPage() {
           <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12">
 
             <div className="grid gap-12 lg:grid-cols-2">
+
 
               {/* FORM */}
 
@@ -345,141 +255,54 @@ export default function ContactPage() {
                 </p>
 
                 <form
-                  onSubmit={handleSubmit}
+                  action="/api/contact"
+                  method="POST"
                   className="mt-10 space-y-6"
                 >
 
-                  {/* NAME */}
+                  <input
+                    type="text"
+                    name="name"
+                    placeholder="Full Name"
+                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
+                    required
+                  />
 
-                  <div>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Email Address"
+                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
+                    required
+                  />
 
-                    <label
-                      htmlFor="name"
-                      className="mb-2 block text-sm font-bold text-slate-800"
-                    >
-                      Full Name
-                    </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    placeholder="Phone Number"
+                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
+                    required
+                  />
 
-                    <input
-                      id="name"
-                      type="text"
-                      value={name}
-                      onChange={(e) =>
-                        setName(e.target.value)
-                      }
-                      placeholder="Enter your full name"
-                      className="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-700/10"
-                      required
-                    />
-
-                  </div>
-
-                  {/* EMAIL */}
-
-                  <div>
-
-                    <label
-                      htmlFor="email"
-                      className="mb-2 block text-sm font-bold text-slate-800"
-                    >
-                      Email Address
-                    </label>
-
-                    <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) =>
-                        setEmail(e.target.value)
-                      }
-                      placeholder="you@example.com"
-                      className="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-700/10"
-                      required
-                    />
-
-                  </div>
-
-                  {/* PHONE */}
-
-                  <div>
-
-                    <label
-                      htmlFor="phone"
-                      className="mb-2 block text-sm font-bold text-slate-800"
-                    >
-                      Phone Number
-                    </label>
-
-                    <input
-                      id="phone"
-                      type="tel"
-                      value={phone}
-                      onChange={(e) =>
-                        setPhone(e.target.value)
-                      }
-                      placeholder="+27..."
-                      className="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-700/10"
-                    />
-
-                  </div>
-
-                  {/* MESSAGE */}
-
-                  <div>
-
-                    <label
-                      htmlFor="message"
-                      className="mb-2 block text-sm font-bold text-slate-800"
-                    >
-                      Your Enquiry
-                    </label>
-
-                    <textarea
-                      id="message"
-                      rows={6}
-                      value={message}
-                      onChange={(e) =>
-                        setMessage(e.target.value)
-                      }
-                      placeholder="Tell us what you need..."
-                      className="w-full resize-none rounded-2xl border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-700/10"
-                      required
-                    />
-
-                  </div>
-
-                  {/* ERROR */}
-
-                  {error && (
-                    <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
-                      {error}
-                    </div>
-                  )}
-
-                  {/* SUCCESS */}
-
-                  {success && (
-                    <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-800">
-                      Your enquiry has been sent successfully.
-                      We'll get back to you as soon as possible.
-                    </div>
-                  )}
-
-                  {/* SUBMIT */}
+                  <textarea
+                    name="message"
+                    rows={6}
+                    placeholder="Tell us what you need..."
+                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
+                    required
+                  />
 
                   <button
                     type="submit"
-                    disabled={loading}
-                    className="w-full rounded-full bg-green-700 py-4 text-lg font-bold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-full bg-green-700 py-4 text-lg font-bold text-white transition hover:bg-green-800"
                   >
-                    {loading
-                      ? "Sending Enquiry..."
-                      : "Send Enquiry"}
+                    Send Enquiry
                   </button>
 
                 </form>
 
               </div>
+
 
               {/* MAP */}
 
@@ -499,6 +322,7 @@ export default function ContactPage() {
           </div>
 
         </section>
+
 
         {/* CTA */}
 
@@ -545,9 +369,11 @@ export default function ContactPage() {
 
         </section>
 
+
         <Footer />
 
       </main>
+
     </>
   );
 }
