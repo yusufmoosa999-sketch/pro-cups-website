@@ -15,7 +15,12 @@ export default function ContactPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const [showCallOptions, setShowCallOptions] = useState(false);
+  const [showWhatsappOptions, setShowWhatsappOptions] = useState(false);
+
+  async function handleSubmit(
+    e: React.FormEvent<HTMLFormElement>
+  ) {
     e.preventDefault();
 
     setLoading(true);
@@ -104,9 +109,9 @@ export default function ContactPage() {
 
             <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
 
-              {/* PHONE */}
+              {/* CALL US */}
 
-              <div className="rounded-[30px] bg-white p-8 shadow-lg">
+              <div className="relative rounded-[30px] bg-white p-8 shadow-lg">
 
                 <div className="text-5xl">
                   📞
@@ -120,18 +125,63 @@ export default function ContactPage() {
                   Speak directly to our sales team.
                 </p>
 
-                <Link
-                  href="tel:+27762538968"
-                  className="mt-8 block rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowCallOptions(!showCallOptions)
+                  }
+                  className="mt-8 w-full rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
                 >
-                  Call Now
-                </Link>
+                  {showCallOptions
+                    ? "Close Options"
+                    : "Choose Who to Call"}
+                </button>
+
+                {showCallOptions && (
+                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+
+                    <a
+                      href="tel:+27762538968"
+                      className="block border-b border-slate-200 p-4 transition hover:bg-green-50"
+                    >
+                      <div className="font-bold text-slate-900">
+                        Yusuf
+                      </div>
+
+                      <div className="mt-1 text-sm text-slate-500">
+                        +27 76 253 8968
+                      </div>
+
+                      <div className="mt-2 text-sm font-bold text-green-700">
+                        Call Yusuf →
+                      </div>
+                    </a>
+
+                    <a
+                      href="tel:+27716772314"
+                      className="block p-4 transition hover:bg-green-50"
+                    >
+                      <div className="font-bold text-slate-900">
+                        Muhummad
+                      </div>
+
+                      <div className="mt-1 text-sm text-slate-500">
+                        +27 71 677 2314
+                      </div>
+
+                      <div className="mt-2 text-sm font-bold text-green-700">
+                        Call Muhummad →
+                      </div>
+                    </a>
+
+                  </div>
+                )}
 
               </div>
 
               {/* WHATSAPP */}
 
-              <div className="rounded-[30px] bg-white p-8 shadow-lg">
+              <div className="relative rounded-[30px] bg-white p-8 shadow-lg">
 
                 <div className="text-5xl">
                   💬
@@ -145,14 +195,63 @@ export default function ContactPage() {
                   Chat with our sales team instantly.
                 </p>
 
-                <Link
-                  href="https://wa.me/27762538968"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-8 block rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowWhatsappOptions(
+                      !showWhatsappOptions
+                    )
+                  }
+                  className="mt-8 w-full rounded-full bg-green-700 py-4 text-center font-bold text-white transition hover:bg-green-800"
                 >
-                  Start Chat
-                </Link>
+                  {showWhatsappOptions
+                    ? "Close Options"
+                    : "Choose WhatsApp"}
+                </button>
+
+                {showWhatsappOptions && (
+                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+
+                    <a
+                      href="https://wa.me/27762538968"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block border-b border-slate-200 p-4 transition hover:bg-green-50"
+                    >
+                      <div className="font-bold text-slate-900">
+                        Yusuf
+                      </div>
+
+                      <div className="mt-1 text-sm text-slate-500">
+                        +27 76 253 8968
+                      </div>
+
+                      <div className="mt-2 text-sm font-bold text-green-700">
+                        WhatsApp Yusuf →
+                      </div>
+                    </a>
+
+                    <a
+                      href="https://wa.me/27716772314"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-4 transition hover:bg-green-50"
+                    >
+                      <div className="font-bold text-slate-900">
+                        Muhummad
+                      </div>
+
+                      <div className="mt-1 text-sm text-slate-500">
+                        +27 71 677 2314
+                      </div>
+
+                      <div className="mt-2 text-sm font-bold text-green-700">
+                        WhatsApp Muhummad →
+                      </div>
+                    </a>
+
+                  </div>
+                )}
 
               </div>
 
@@ -361,8 +460,8 @@ export default function ContactPage() {
 
                   {success && (
                     <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-800">
-                      Your enquiry has been sent successfully. We'll
-                      get back to you as soon as possible.
+                      Your enquiry has been sent successfully.
+                      We'll get back to you as soon as possible.
                     </div>
                   )}
 
