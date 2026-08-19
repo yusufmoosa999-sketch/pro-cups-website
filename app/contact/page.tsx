@@ -1,10 +1,13 @@
+
+
 "use client";
 
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
-import type { Metadata } from "next";
 import { useState } from "react";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 export default function ContactPage() {
   const [name, setName] = useState("");
@@ -106,7 +109,6 @@ export default function ContactPage() {
 
             <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
 
-
               {/* CALL US */}
 
               <div className="rounded-[30px] bg-white p-8 shadow-lg">
@@ -133,7 +135,7 @@ export default function ContactPage() {
                       Yusuf
                     </div>
 
-                    <div className="mt-1 text-sm text-slate-500">
+                    <div className="mt-1 text-sm text-slate-600">
                       +27 76 253 8968
                     </div>
 
@@ -150,7 +152,7 @@ export default function ContactPage() {
                       Muhummad
                     </div>
 
-                    <div className="mt-1 text-sm text-slate-500">
+                    <div className="mt-1 text-sm text-slate-600">
                       +27 71 677 2314
                     </div>
 
@@ -192,7 +194,7 @@ export default function ContactPage() {
                       Yusuf
                     </div>
 
-                    <div className="mt-1 text-sm text-slate-500">
+                    <div className="mt-1 text-sm text-slate-600">
                       +27 76 253 8968
                     </div>
 
@@ -211,7 +213,7 @@ export default function ContactPage() {
                       Muhummad
                     </div>
 
-                    <div className="mt-1 text-sm text-slate-500">
+                    <div className="mt-1 text-sm text-slate-600">
                       +27 71 677 2314
                     </div>
 
@@ -290,7 +292,6 @@ export default function ContactPage() {
 
             <div className="grid gap-12 lg:grid-cols-2">
 
-
               {/* FORM */}
 
               <div className="rounded-[32px] bg-white p-8 shadow-xl lg:p-10">
@@ -313,41 +314,94 @@ export default function ContactPage() {
                   className="mt-10 space-y-6"
                 >
 
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
-                    required
-                  />
+                  {/* FULL NAME */}
 
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
-                    required
-                  />
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-slate-900">
+                      Full Name
+                    </label>
 
-                  <input
-                    type="tel"
-                    placeholder="Phone Number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
-                    required
-                  />
+                    <input
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 text-base text-slate-900 placeholder:text-slate-500 outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-100"
+                      required
+                    />
+                  </div>
 
-                  <textarea
-                    rows={6}
-                    placeholder="Tell us what you need..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 px-5 py-4 outline-none transition focus:border-green-700"
-                    required
-                  />
+
+                  {/* EMAIL */}
+
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-slate-900">
+                      Email Address
+                    </label>
+
+                    <input
+                      type="email"
+                      placeholder="Enter your email address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 text-base text-slate-900 placeholder:text-slate-500 outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-100"
+                      required
+                    />
+                  </div>
+
+
+                  {/* PHONE */}
+
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-slate-900">
+                      Phone Number
+                    </label>
+
+                    <PhoneInput
+                      country="za"
+                      preferredCountries={["za"]}
+                      excludeCountries={["il"]}
+                      enableSearch={true}
+                      searchPlaceholder="Search country or calling code..."
+                      searchNotFound="Country not found"
+                      disableSearchIcon={false}
+                      countryCodeEditable={false}
+                      value={phone}
+                      onChange={(value) => {
+                        setPhone(value ? `+${value}` : "");
+                      }}
+                      inputProps={{
+                        name: "phone",
+                        required: true,
+                        autoComplete: "tel",
+                      }}
+                      containerClass="pro-phone-container"
+                      inputClass="pro-phone-input"
+                      buttonClass="pro-phone-button"
+                      dropdownClass="pro-phone-dropdown"
+                    />
+                  </div>
+
+
+                  {/* MESSAGE */}
+
+                  <div>
+                    <label className="mb-2 block text-sm font-bold text-slate-900">
+                      Your Enquiry
+                    </label>
+
+                    <textarea
+                      rows={6}
+                      placeholder="Tell us what you need..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-5 py-4 text-base text-slate-900 placeholder:text-slate-500 outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-100"
+                      required
+                    />
+                  </div>
+
+
+                  {/* SUCCESS */}
 
                   {success && (
                     <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-green-700">
@@ -355,11 +409,17 @@ export default function ContactPage() {
                     </div>
                   )}
 
+
+                  {/* ERROR */}
+
                   {error && (
                     <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
                       {error}
                     </div>
                   )}
+
+
+                  {/* SUBMIT */}
 
                   <button
                     type="submit"
@@ -443,6 +503,165 @@ export default function ContactPage() {
         <Footer />
 
       </main>
+
+
+      {/* PHONE INPUT STYLING */}
+
+      <style jsx global>{`
+
+      /* PHONE NUMBER TEXT */
+.pro-phone-input {
+  color: #0f172a !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.pro-phone-input::placeholder {
+  color: #64748b !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+  /* PHONE DROPDOWN ITSELF */
+  .pro-phone-dropdown {
+    width: 330px !important;
+    max-width: calc(100vw - 40px) !important;
+
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 16px !important;
+
+    box-shadow:
+      0 20px 45px rgba(15, 23, 42, 0.18),
+      0 4px 12px rgba(15, 23, 42, 0.08) !important;
+
+    /* THIS IS THE IMPORTANT PART */
+    height: 360px !important;
+    max-height: 360px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    scrollbar-width: auto !important;
+    scrollbar-color: #64748b #e2e8f0 !important;
+
+    z-index: 9999 !important;
+  }
+
+  /* CHROME / EDGE SCROLLBAR */
+  .pro-phone-dropdown::-webkit-scrollbar {
+    width: 10px !important;
+  }
+
+  .pro-phone-dropdown::-webkit-scrollbar-track {
+    background: #e2e8f0 !important;
+    border-radius: 10px !important;
+  }
+
+  .pro-phone-dropdown::-webkit-scrollbar-thumb {
+    background: #64748b !important;
+    border-radius: 10px !important;
+  }
+
+  .pro-phone-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #475569 !important;
+  }
+
+  /* SEARCH BOX STAYS AT TOP */
+  .pro-phone-dropdown .search {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 20 !important;
+
+    background: #ffffff !important;
+
+    padding: 12px !important;
+    margin: 0 !important;
+
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  .pro-phone-dropdown .search-box {
+    width: 100% !important;
+    height: 44px !important;
+
+    box-sizing: border-box !important;
+
+    border: 1px solid #94a3b8 !important;
+    border-radius: 10px !important;
+
+    background: #ffffff !important;
+    color: #0f172a !important;
+
+    padding: 0 12px !important;
+
+    font-size: 14px !important;
+    outline: none !important;
+  }
+
+  .pro-phone-dropdown .search-box::placeholder {
+    color: #64748b !important;
+    opacity: 1 !important;
+  }
+
+  .pro-phone-dropdown .search-box:focus {
+    border-color: #15803d !important;
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15) !important;
+  }
+
+  /* COUNTRY ROWS */
+  .pro-phone-dropdown .country {
+    min-height: 44px !important;
+    box-sizing: border-box !important;
+
+    padding: 10px 14px !important;
+
+    background: #ffffff !important;
+    color: #0f172a !important;
+
+    font-size: 14px !important;
+    font-weight: 500 !important;
+
+    border-bottom: 1px solid #f1f5f9 !important;
+
+    cursor: pointer !important;
+  }
+
+  .pro-phone-dropdown .country:hover {
+    background: #f0fdf4 !important;
+    color: #166534 !important;
+  }
+
+  /* SELECTED / HIGHLIGHTED */
+  .pro-phone-dropdown .country.highlight {
+    background: #dcfce7 !important;
+    color: #14532d !important;
+    font-weight: 700 !important;
+  }
+
+  .pro-phone-dropdown .country-name {
+    color: #0f172a !important;
+  }
+
+  .pro-phone-dropdown .dial-code {
+    color: #475569 !important;
+    font-weight: 600 !important;
+  }
+
+  /* MAKE SURE MOUSE/TOUCH SCROLLING WORKS */
+  .pro-phone-dropdown {
+    pointer-events: auto !important;
+    touch-action: pan-y !important;
+  }
+
+  @media (max-width: 640px) {
+    .pro-phone-dropdown {
+      width: 300px !important;
+      max-width: calc(100vw - 32px) !important;
+      height: 320px !important;
+      max-height: 320px !important;
+    }
+  }
+`}</style>
     </>
   );
 }
