@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     const { data, error } = await resend.emails.send({
       from: "Pro Cups International <info@procupsinternational.com>",
 
-      to: ["yusuf@smartpacktrading.co.za"],
+      to: ["info@procupsinternational.com"],
 
       replyTo: email,
 
