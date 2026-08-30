@@ -71,6 +71,7 @@ export default async function QuoteDetails({
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "Africa/Johannesburg",
     });
   }
 
@@ -692,7 +693,8 @@ export default async function QuoteDetails({
                       {new Date(
                         quote.customer_approved_at
                       ).toLocaleString(
-                        "en-ZA"
+                        "en-ZA",
+                        { timeZone: "Africa/Johannesburg" }
                       )}
                     </p>
                   )}
@@ -818,7 +820,8 @@ export default async function QuoteDetails({
                       {new Date(
                         quote.customer_quote_accepted_at
                       ).toLocaleString(
-                        "en-ZA"
+                        "en-ZA",
+                        { timeZone: "Africa/Johannesburg" }
                       )}
                     </p>
                   )}
