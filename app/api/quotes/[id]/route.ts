@@ -1,18 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-const adminSupabase = createAdminClient(
+const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const FROM_EMAIL =
-  "Pro Cups International <info@procupsinternational.com>";
-
-const COMPANY_EMAIL = "info@procupsinternational.com";
 
 function escapeHtml(value: string) {
   return value
@@ -23,254 +16,130 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#039;");
 }
 
-function formatCurrency(value: number | null | undefined) {
-  if (value == null || Number.isNaN(Number(value))) {
-    return "R0.00";
-  }
-
+function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-ZA", {
     style: "currency",
     currency: "ZAR",
     minimumFractionDigits: 2,
-  }).format(Number(value));
+  }).format(value);
 }
 
 function emailLayout(content: string) {
   return `
     <!DOCTYPE html>
     <html>
-      <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-        <div style="width:100%;padding:40px 15px;box-sizing:border-box;">
-          <div style="max-width:650px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;">
+      <body
+        style="
+          margin:0;
+          padding:0;
+          background:#f3f4f6;
+          font-family:Arial,Helvetica,sans-serif;
+          color:#111827;
+        "
+      >
 
-            <div style="padding:28px 35px;background:#0f172a;">
-              <div style="font-size:24px;font-weight:800;color:#ffffff;">
-                Pro Cups <span style="color:#4ade80;">International</span>
+        <div style="padding:40px 15px;">
+
+          <div
+            style="
+              max-width:650px;
+              margin:0 auto;
+              background:#ffffff;
+              border:1px solid #e5e7eb;
+              border-radius:16px;
+              overflow:hidden;
+            "
+          >
+
+            <div
+              style="
+                background:#008f3d;
+                padding:28px 35px;
+                text-align:center;
+              "
+            >
+
+              <div
+                style="
+                  display:inline-block;
+                  background:#ffffff;
+                  color:#008f3d;
+                  width:48px;
+                  height:48px;
+                  line-height:48px;
+                  border-radius:12px;
+                  font-size:25px;
+                  font-weight:900;
+                "
+              >
+                P
               </div>
 
-              <div style="margin-top:6px;font-size:13px;color:#cbd5e1;">
-                Premium Paper Cup Manufacturing
+              <div
+                style="
+                  margin-top:12px;
+                  color:#ffffff;
+                  font-size:20px;
+                  font-weight:700;
+                "
+              >
+                Pro Cups International
               </div>
+
             </div>
 
             <div style="padding:35px;">
               ${content}
             </div>
 
-            <div style="padding:25px 35px;border-top:1px solid #e5e7eb;background:#ffffff;">
-              <div style="font-size:14px;font-weight:700;color:#111827;">
+            <div
+              style="
+                border-top:1px solid #e5e7eb;
+                padding:24px 35px;
+                background:#fafafa;
+                text-align:center;
+              "
+            >
+
+              <div
+                style="
+                  font-size:14px;
+                  font-weight:700;
+                  color:#111827;
+                "
+              >
                 Pro Cups International
               </div>
 
-              <div style="margin-top:6px;font-size:13px;line-height:21px;color:#64748b;">
-                Premium custom printed paper cups<br />
-                South Africa
+              <div
+                style="
+                  margin-top:6px;
+                  font-size:13px;
+                  color:#6b7280;
+                "
+              >
+                Premium Paper Cups &amp; Custom Printing
               </div>
 
-              <div style="margin-top:12px;font-size:13px;">
-                <a
-                  href="mailto:info@procupsinternational.com"
-                  style="color:#15803d;text-decoration:none;font-weight:600;"
-                >
-                  info@procupsinternational.com
-                </a>
-                <br />
-
-                <a
-                  href="https://procupsinternational.com"
-                  style="color:#15803d;text-decoration:none;font-weight:600;"
-                >
-                  procupsinternational.com
-                </a>
+              <div
+                style="
+                  margin-top:10px;
+                  font-size:13px;
+                  color:#6b7280;
+                "
+              >
+                procupsinternational.com
               </div>
+
             </div>
 
           </div>
+
         </div>
+
       </body>
     </html>
   `;
-}
-
-async function sendQuotationReadyEmail({
-  name,
-  email,
-  quoteId,
-  companyName,
-  product,
-  size,
-  quantity,
-  unitPrice,
-  subtotal,
-  vatAmount,
-  totalAmount,
-  notes,
-}: {
-  name: string;
-  email: string;
-  quoteId: string;
-  companyName: string;
-  product: string;
-  size: string;
-  quantity: number;
-  unitPrice: number;
-  subtotal: number;
-  vatAmount: number;
-  totalAmount: number;
-  notes: string;
-}) {
-  const customerName = escapeHtml(name || "Customer");
-
-  return resend.emails.send({
-    from: FROM_EMAIL,
-    to: [email],
-    subject: "Your Quotation Is Ready - Pro Cups International",
-
-    html: emailLayout(`
-      <p style="margin:0;font-size:28px;font-weight:800;color:#111827;">
-        Your Quotation Is Ready
-      </p>
-
-      <p style="margin:18px 0 0;font-size:16px;line-height:27px;color:#475569;">
-        Hi ${customerName},
-      </p>
-
-      <p style="margin:14px 0 0;font-size:16px;line-height:27px;color:#475569;">
-        Your quotation from Pro Cups International has been prepared
-        and is now ready for you to review.
-      </p>
-
-      <div style="margin-top:28px;padding:22px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;">
-
-        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#15803d;">
-          Quotation
-        </div>
-
-        <table style="width:100%;margin-top:16px;border-collapse:collapse;">
-
-          <tr>
-            <td style="padding:8px 0;color:#64748b;font-size:14px;">
-              Company
-            </td>
-
-            <td style="padding:8px 0;text-align:right;font-weight:700;color:#111827;font-size:14px;">
-              ${escapeHtml(companyName || "Not provided")}
-            </td>
-          </tr>
-
-          <tr>
-            <td style="padding:8px 0;color:#64748b;font-size:14px;">
-              Product
-            </td>
-
-            <td style="padding:8px 0;text-align:right;font-weight:700;color:#111827;font-size:14px;">
-              ${escapeHtml(product || "Not provided")}
-            </td>
-          </tr>
-
-          <tr>
-            <td style="padding:8px 0;color:#64748b;font-size:14px;">
-              Size
-            </td>
-
-            <td style="padding:8px 0;text-align:right;font-weight:700;color:#111827;font-size:14px;">
-              ${escapeHtml(size || "Not provided")}
-            </td>
-          </tr>
-
-          <tr>
-            <td style="padding:8px 0;color:#64748b;font-size:14px;">
-              Quantity
-            </td>
-
-            <td style="padding:8px 0;text-align:right;font-weight:700;color:#111827;font-size:14px;">
-              ${Number(quantity || 0).toLocaleString("en-ZA")}
-            </td>
-          </tr>
-
-        </table>
-      </div>
-
-      <div style="margin-top:18px;padding:22px;border-radius:14px;background:#ffffff;border:1px solid #e2e8f0;">
-
-        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#15803d;">
-          Pricing
-        </div>
-
-        <table style="width:100%;margin-top:16px;border-collapse:collapse;">
-
-          <tr>
-            <td style="padding:8px 0;color:#64748b;font-size:14px;">
-              Unit Price
-            </td>
-
-            <td style="padding:8px 0;text-align:right;font-weight:700;color:#111827;font-size:14px;">
-              ${formatCurrency(unitPrice)}
-            </td>
-          </tr>
-
-          <tr>
-            <td style="padding:8px 0;color:#64748b;font-size:14px;">
-              Subtotal
-            </td>
-
-            <td style="padding:8px 0;text-align:right;font-weight:700;color:#111827;font-size:14px;">
-              ${formatCurrency(subtotal)}
-            </td>
-          </tr>
-
-          <tr>
-            <td style="padding:8px 0;color:#64748b;font-size:14px;">
-              VAT (15%)
-            </td>
-
-            <td style="padding:8px 0;text-align:right;font-weight:700;color:#111827;font-size:14px;">
-              ${formatCurrency(vatAmount)}
-            </td>
-          </tr>
-
-          <tr>
-            <td style="padding:16px 0 4px;border-top:1px solid #e2e8f0;font-size:18px;font-weight:800;color:#111827;">
-              Total
-            </td>
-
-            <td style="padding:16px 0 4px;border-top:1px solid #e2e8f0;text-align:right;font-size:20px;font-weight:800;color:#15803d;">
-              ${formatCurrency(totalAmount)}
-            </td>
-          </tr>
-
-        </table>
-      </div>
-
-      ${
-        notes
-          ? `
-            <div style="margin-top:18px;padding:20px;border-radius:14px;background:#f0fdf4;border:1px solid #bbf7d0;">
-              <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#15803d;">
-                Notes
-              </div>
-
-              <p style="margin:10px 0 0;font-size:14px;line-height:23px;color:#166534;">
-                ${escapeHtml(notes).replace(/\n/g, "<br />")}
-              </p>
-            </div>
-          `
-          : ""
-      }
-
-      <div style="margin-top:28px;padding:18px 20px;border-left:4px solid #16a34a;background:#f0fdf4;">
-        <p style="margin:0;font-size:14px;line-height:23px;color:#166534;">
-          Your print proof will be sent to you separately when it is
-          ready for review.
-        </p>
-      </div>
-
-      <p style="margin:25px 0 0;font-size:14px;line-height:23px;color:#64748b;">
-        Please keep this email for your records. You can contact us at
-        info@procupsinternational.com if you have any questions.
-      </p>
-    `),
-  });
 }
 
 export async function PATCH(
@@ -292,16 +161,41 @@ export async function PATCH(
       quotation_created_at,
     } = body;
 
-    // Build the update object only with fields that were provided.
+    /*
+     * Get the existing quote first.
+     *
+     * This allows us to determine whether this is the
+     * first time a quotation has been prepared.
+     */
+    const { data: existingQuote, error: existingQuoteError } =
+      await supabase
+        .from("quote_requests")
+        .select(
+          "id, company_name, contact_name, email, product, size, quantity, total_amount, quotation_created_at"
+        )
+        .eq("id", id)
+        .single();
+
+    if (existingQuoteError || !existingQuote) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Quote not found.",
+        },
+        { status: 404 }
+      );
+    }
+
+    /*
+     * Build update object exactly as before.
+     */
     const updates: Record<string, unknown> = {};
 
-    // STATUS UPDATE
     if (status !== undefined) {
       updates.status = status;
       updates.status_updated_at = new Date().toISOString();
     }
 
-    // QUOTATION UPDATE
     if (unit_price !== undefined) {
       updates.unit_price = Number(unit_price);
     }
@@ -326,7 +220,6 @@ export async function PATCH(
       updates.quotation_created_at = quotation_created_at;
     }
 
-    // Make sure something was actually sent.
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(
         {
@@ -340,7 +233,7 @@ export async function PATCH(
     console.log("Updating quote:", id);
     console.log("Update data:", updates);
 
-    const { data, error } = await adminSupabase
+    const { data, error } = await supabase
       .from("quote_requests")
       .update(updates)
       .eq("id", id)
@@ -360,66 +253,207 @@ export async function PATCH(
     }
 
     /*
-     * Send quotation email only when a complete quotation has
-     * actually been saved.
+     * Only send the "quotation ready" email when the quotation
+     * is being created for the first time.
      *
-     * This prevents emails being sent for unrelated status updates.
+     * This prevents an email being sent every time you edit
+     * the quotation.
      */
-    const quotationWasSaved =
-      unit_price !== undefined &&
-      subtotal !== undefined &&
-      vat_amount !== undefined &&
+    const isFirstQuotation =
+      existingQuote.quotation_created_at == null &&
+      existingQuote.total_amount == null &&
+      quotation_created_at !== undefined &&
       total_amount !== undefined;
 
-    if (quotationWasSaved) {
-      const customerEmail = String(data.email || "").trim();
+    let emailSent = false;
 
-      if (customerEmail) {
-        try {
-          const emailResult = await sendQuotationReadyEmail({
-            name: String(data.contact_name || ""),
-            email: customerEmail,
-            quoteId: String(data.id),
-            companyName: String(data.company_name || ""),
-            product: String(data.product || ""),
-            size: String(data.size || ""),
-            quantity: Number(data.quantity || 0),
-            unitPrice: Number(data.unit_price || 0),
-            subtotal: Number(data.subtotal || 0),
-            vatAmount: Number(data.vat_amount || 0),
-            totalAmount: Number(data.total_amount || 0),
-            notes: String(data.quotation_notes || ""),
+    if (isFirstQuotation) {
+      const apiKey = process.env.RESEND_API_KEY;
+
+      if (!apiKey) {
+        console.error(
+          "RESEND_API_KEY is missing. Quotation was saved but email was not sent."
+        );
+      } else if (!existingQuote.email) {
+        console.error(
+          "Customer has no email address. Quotation was saved but email was not sent."
+        );
+      } else {
+        const resend = new Resend(apiKey);
+
+        const customerName =
+          existingQuote.contact_name || "Customer";
+
+        const customerEmail =
+          String(existingQuote.email).trim();
+
+        const quantity = Number(existingQuote.quantity) || 0;
+
+        const total = Number(total_amount) || 0;
+
+        const quotationEmail = emailLayout(`
+          <p
+            style="
+              margin:0;
+              font-size:15px;
+              color:#6b7280;
+            "
+          >
+            Hello ${escapeHtml(customerName)},
+          </p>
+
+          <h1
+            style="
+              margin:10px 0 0;
+              font-size:28px;
+              line-height:1.25;
+              color:#111827;
+            "
+          >
+            Your Quotation Is Ready
+          </h1>
+
+          <p
+            style="
+              margin:18px 0 0;
+              font-size:16px;
+              line-height:1.7;
+              color:#4b5563;
+            "
+          >
+            Thank you for choosing Pro Cups International.
+            We have prepared your quotation based on your
+            recent request.
+          </p>
+
+          <div
+            style="
+              margin-top:28px;
+              padding:22px;
+              background:#f9fafb;
+              border:1px solid #e5e7eb;
+              border-radius:12px;
+            "
+          >
+
+            <div
+              style="
+                font-size:13px;
+                font-weight:700;
+                text-transform:uppercase;
+                letter-spacing:1px;
+                color:#008f3d;
+                margin-bottom:15px;
+              "
+            >
+              Quotation Summary
+            </div>
+
+            <p style="margin:0 0 10px;font-size:14px;">
+              <strong>Product:</strong>
+              ${escapeHtml(String(existingQuote.product || "Not provided"))}
+            </p>
+
+            <p style="margin:0 0 10px;font-size:14px;">
+              <strong>Size:</strong>
+              ${escapeHtml(String(existingQuote.size || "Not provided"))}
+            </p>
+
+            <p style="margin:0 0 10px;font-size:14px;">
+              <strong>Quantity:</strong>
+              ${quantity.toLocaleString("en-ZA")}
+            </p>
+
+            <p
+              style="
+                margin:18px 0 0;
+                padding-top:18px;
+                border-top:1px solid #e5e7eb;
+                font-size:18px;
+                font-weight:700;
+                color:#008f3d;
+              "
+            >
+              Total: ${formatCurrency(total)}
+            </p>
+
+          </div>
+
+          <p
+            style="
+              margin:25px 0 0;
+              font-size:15px;
+              line-height:1.7;
+              color:#4b5563;
+            "
+          >
+            Your quotation is now available through
+            Pro Cups International. Please contact us if
+            you have any questions regarding the quotation.
+          </p>
+
+          <div
+            style="
+              margin-top:28px;
+              padding:18px 20px;
+              border-left:4px solid #008f3d;
+              background:#f0fdf4;
+            "
+          >
+
+            <p
+              style="
+                margin:0;
+                font-size:14px;
+                line-height:1.6;
+                color:#166534;
+              "
+            >
+              <strong>Your quotation has been prepared successfully.</strong><br />
+              Pro Cups International will assist you with the next steps.
+            </p>
+
+          </div>
+        `);
+
+        const { error: emailError } =
+          await resend.emails.send({
+            from:
+              "Pro Cups International <info@procupsinternational.com>",
+
+            to: [customerEmail],
+
+            replyTo:
+              "info@procupsinternational.com",
+
+            subject:
+              "Your Quotation Is Ready - Pro Cups International",
+
+            html: quotationEmail,
           });
 
-          if (emailResult.error) {
-            console.error(
-              "Quotation email RESEND error:",
-              emailResult.error
-            );
-          } else {
-            console.log(
-              "Quotation ready email sent:",
-              emailResult.data
-            );
-          }
-        } catch (emailError) {
+        if (emailError) {
           console.error(
-            "Quotation ready email failed:",
+            "Quotation email error:",
             emailError
           );
+        } else {
+          emailSent = true;
+
+          console.log(
+            "Quotation ready email sent to:",
+            customerEmail
+          );
         }
-      } else {
-        console.warn(
-          "Quotation saved but customer has no email address:",
-          id
-        );
       }
     }
 
     return NextResponse.json({
       success: true,
       quote: data,
+      emailSent,
     });
+
   } catch (error) {
     console.error("Quote PATCH error:", error);
 

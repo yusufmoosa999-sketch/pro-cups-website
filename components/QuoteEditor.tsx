@@ -100,6 +100,7 @@ export default function QuoteEditor({
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+
       <div>
         <p className="text-sm font-bold uppercase tracking-[3px] text-green-600">
           Quotation
@@ -116,6 +117,7 @@ export default function QuoteEditor({
       </div>
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">
+
         <div>
           <label className="mb-2 block text-sm font-bold text-slate-700">
             Quantity
@@ -132,6 +134,7 @@ export default function QuoteEditor({
           </label>
 
           <div className="flex min-h-12 overflow-hidden rounded-xl border border-slate-300 bg-white focus-within:border-green-600 focus-within:ring-2 focus-within:ring-green-100">
+
             <span className="flex items-center bg-slate-50 px-4 font-bold text-slate-500">
               R
             </span>
@@ -149,12 +152,16 @@ export default function QuoteEditor({
               placeholder="0.00"
               className="min-w-0 flex-1 px-4 py-3 text-base font-bold text-slate-900 outline-none"
             />
+
           </div>
         </div>
+
       </div>
 
       <div className="mt-8 rounded-2xl bg-slate-50 p-5 sm:p-6">
+
         <div className="space-y-4">
+
           <div className="flex items-center justify-between gap-4">
             <span className="text-sm font-semibold text-slate-500">
               Subtotal
@@ -176,7 +183,9 @@ export default function QuoteEditor({
           </div>
 
           <div className="border-t border-slate-200 pt-4">
+
             <div className="flex items-center justify-between gap-4">
+
               <span className="text-lg font-black text-slate-900">
                 Total
               </span>
@@ -184,12 +193,17 @@ export default function QuoteEditor({
               <span className="text-xl font-black text-green-700 sm:text-2xl">
                 {formatCurrency(calculations.total)}
               </span>
+
             </div>
+
           </div>
+
         </div>
+
       </div>
 
       <div className="mt-8">
+
         <label className="mb-2 block text-sm font-bold text-slate-700">
           Notes for Customer
         </label>
@@ -204,6 +218,7 @@ export default function QuoteEditor({
           placeholder="Add any quotation notes, delivery information, payment terms, or other details..."
           className="w-full resize-y rounded-xl border border-slate-300 px-4 py-3 text-base text-slate-900 outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
         />
+
       </div>
 
       {error && (
@@ -214,11 +229,12 @@ export default function QuoteEditor({
 
       {saved && (
         <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-semibold text-green-700">
-          ✓ Quotation saved successfully.
+          ✓ Quotation saved successfully. The customer has been notified by email.
         </div>
       )}
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+
         <button
           type="button"
           onClick={saveQuotation}
@@ -227,7 +243,9 @@ export default function QuoteEditor({
         >
           {saving ? "Saving..." : "Save Quotation"}
         </button>
+
       </div>
+
     </div>
   );
 }
