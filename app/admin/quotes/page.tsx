@@ -16,54 +16,12 @@ const supabase = createClient(
   }
 );
 
-async function deleteQuote(formData: FormData) {
-  "use server";
-
-  const id = formData.get("id");
-
-  if (!id || typeof id !== "string") {
-    throw new Error("Invalid quote ID.");
-  }
-
-  const { error } = await supabase
-    .from("quote_requests")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    console.error("Delete quote error:", error);
-    throw new Error("Failed to delete quote.");
-  }
-}
-
-async function deleteSelectedQuotes(formData: FormData) {
-  "use server";
-
-  const ids = formData
-    .getAll("ids")
-    .filter((id): id is string => typeof id === "string");
-
-  if (ids.length === 0) {
-    return;
-  }
-
-  const { error } = await supabase
-    .from("quote_requests")
-    .delete()
-    .in("id", ids);
-
-  if (error) {
-    console.error("Bulk delete quotes error:", error);
-    throw new Error("Failed to delete selected quotes.");
-  }
-}
-
 export default async function QuotesPage() {
   /*
-   * Always fetch fresh data.
+   * ALWAYS FETCH FRESH QUOTE DATA
    *
-   * This page is intentionally dynamic because new customer
-   * quote requests need to appear in the admin dashboard.
+   * This is your existing Supabase connection.
+   * Nothing else in your quote system is being changed.
    */
 
   const { data: quotes, error } = await supabase
@@ -74,15 +32,11 @@ export default async function QuotesPage() {
     });
 
   if (error) {
-    console.error(
-      "Admin quotes loading error:",
-      error
-    );
+    console.error("Admin quotes loading error:", error);
 
     return (
       <main className="min-h-screen bg-slate-100 p-5 sm:p-8 lg:p-12">
         <div className="mx-auto max-w-7xl">
-
           <div className="rounded-3xl border border-red-200 bg-red-50 p-6">
 
             <p className="text-sm font-bold uppercase tracking-[3px] text-red-600">
@@ -98,18 +52,15 @@ export default async function QuotesPage() {
             </p>
 
             <div className="mt-6">
-
               <Link
                 href="/admin/quotes"
                 className="inline-flex rounded-xl bg-red-700 px-5 py-3 font-bold text-white transition hover:bg-red-800"
               >
                 Try Again
               </Link>
-
             </div>
 
           </div>
-
         </div>
       </main>
     );
@@ -118,39 +69,36 @@ export default async function QuotesPage() {
   const allQuotes = quotes || [];
 
   /*
-   * Current quote statuses used throughout the system.
+   * STATISTICS
    */
 
   const totalQuotes = allQuotes.length;
 
   const newQuotes = allQuotes.filter(
-    (quote) =>
-      quote.status === "New"
+    (quote) => quote.status === "New"
   ).length;
 
   const quotedQuotes = allQuotes.filter(
-    (quote) =>
-      quote.status === "Quoted"
+    (quote) => quote.status === "Quoted"
   ).length;
 
   const awaitingPayment = allQuotes.filter(
-    (quote) =>
-      quote.status === "Payment Pending"
+    (quote) => quote.status === "Payment Pending"
   ).length;
 
   const inProduction = allQuotes.filter(
-    (quote) =>
-      quote.status === "In Production"
+    (quote) => quote.status === "In Production"
   ).length;
 
   const completedQuotes = allQuotes.filter(
-    (quote) =>
-      quote.status === "Completed"
+    (quote) => quote.status === "Completed"
   ).length;
 
-  function statusStyle(
-    status: string | null
-  ) {
+  /*
+   * STATUS STYLING
+   */
+
+  function statusStyle(status: string | null) {
     switch (status) {
       case "New":
         return "bg-blue-100 text-blue-700";
@@ -187,45 +135,39 @@ export default async function QuotesPage() {
     }
   }
 
-  function formatDate(
-    date: string | null
-  ) {
+  /*
+   * DATE FORMAT
+   */
+
+  function formatDate(date: string | null) {
     if (!date) {
       return "—";
     }
 
-    return new Date(date).toLocaleDateString(
-      "en-ZA",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }
-    );
+    return new Date(date).toLocaleDateString("en-ZA", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   }
 
-  function formatQuantity(
-    quantity: unknown
-  ) {
-    if (
-      typeof quantity === "number"
-    ) {
-      return quantity.toLocaleString(
-        "en-ZA"
-      );
+  /*
+   * QUANTITY FORMAT
+   */
+
+  function formatQuantity(quantity: unknown) {
+    if (typeof quantity === "number") {
+      return quantity.toLocaleString("en-ZA");
     }
 
     if (
       typeof quantity === "string" &&
       quantity.trim()
     ) {
-      const number =
-        Number(quantity);
+      const number = Number(quantity);
 
       if (!Number.isNaN(number)) {
-        return number.toLocaleString(
-          "en-ZA"
-        );
+        return number.toLocaleString("en-ZA");
       }
 
       return quantity;
@@ -239,9 +181,7 @@ export default async function QuotesPage() {
 
       <div className="mx-auto max-w-7xl">
 
-        {/* =====================================================
-            HEADER
-        ===================================================== */}
+        {/* HEADER */}
 
         <div className="mb-8">
 
@@ -276,16 +216,11 @@ export default async function QuotesPage() {
         </div>
 
 
-        {/* =====================================================
-            STAT CARDS
-        ===================================================== */}
+        {/* STAT CARDS */}
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
 
-          {/* Total */}
-
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
             <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Total
             </p>
@@ -293,14 +228,10 @@ export default async function QuotesPage() {
             <p className="mt-3 text-3xl font-black text-slate-950 sm:text-4xl">
               {totalQuotes}
             </p>
-
           </div>
 
 
-          {/* New */}
-
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
             <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
               New
             </p>
@@ -308,14 +239,10 @@ export default async function QuotesPage() {
             <p className="mt-3 text-3xl font-black text-blue-600 sm:text-4xl">
               {newQuotes}
             </p>
-
           </div>
 
 
-          {/* Quoted */}
-
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
             <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Quoted
             </p>
@@ -323,14 +250,10 @@ export default async function QuotesPage() {
             <p className="mt-3 text-3xl font-black text-purple-600 sm:text-4xl">
               {quotedQuotes}
             </p>
-
           </div>
 
 
-          {/* Payment Pending */}
-
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
             <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Awaiting Payment
             </p>
@@ -338,14 +261,10 @@ export default async function QuotesPage() {
             <p className="mt-3 text-3xl font-black text-orange-600 sm:text-4xl">
               {awaitingPayment}
             </p>
-
           </div>
 
 
-          {/* Production */}
-
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
             <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Production
             </p>
@@ -353,14 +272,10 @@ export default async function QuotesPage() {
             <p className="mt-3 text-3xl font-black text-indigo-600 sm:text-4xl">
               {inProduction}
             </p>
-
           </div>
 
 
-          {/* Completed */}
-
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
             <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Completed
             </p>
@@ -368,76 +283,41 @@ export default async function QuotesPage() {
             <p className="mt-3 text-3xl font-black text-emerald-600 sm:text-4xl">
               {completedQuotes}
             </p>
-
           </div>
 
         </div>
 
 
-        {/* =====================================================
-            QUOTES
-        ===================================================== */}
+        {/* QUOTES */}
 
         <div className="mt-8">
 
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-            <h2 className="text-2xl font-black text-slate-950">
-              Customer Quotes
-            </h2>
+            <div>
+              <h2 className="text-2xl font-black text-slate-950">
+                Customer Quotes
+              </h2>
 
-            <form
-              id="bulk-delete-form"
-              action={async (formData) => {
-                const ids = formData.getAll("ids");
+              <p className="mt-1 text-sm text-slate-500">
+                Select test quotes individually or delete multiple at once.
+              </p>
+            </div>
 
-                if (ids.length === 0) {
-                  alert("Please select at least one quote to delete.");
-                  return;
-                }
-
-                const confirmed = window.confirm(
-                  `Are you sure you want to permanently delete ${ids.length} selected quote${ids.length === 1 ? "" : "s"
-                  }?`
-                );
-
-                if (!confirmed) return;
-
-                await deleteSelectedQuotes(formData);
-              }}
-              className="mt-4 flex flex-wrap items-center gap-3"
-            >
-              <button
-                type="submit"
-                className="rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-700"
-              >
-                Delete Selected
-              </button>
-
-              <span className="text-sm text-slate-500">
-                Select the test quotes you want to remove.
-              </span>
-            </form>
-
-            <p className="text-sm text-slate-500">
-              Showing {totalQuotes} request
-              {totalQuotes === 1
-                ? ""
-                : "s"}
-            </p>
+            <QuoteDeleteControls
+              mode="bulk"
+            />
 
           </div>
 
 
-          {/* =================================================
-              DESKTOP TABLE
-          ================================================= */}
+          {/* DESKTOP TABLE */}
 
           <div className="hidden overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm md:block">
 
             <div className="overflow-x-auto">
 
-              <table className="w-full min-w-[1050px]">
+              <table className="w-full min-w-[1150px]">
 
                 <thead className="bg-slate-950 text-white">
 
@@ -486,147 +366,146 @@ export default async function QuotesPage() {
 
                 <tbody className="divide-y divide-slate-100">
 
-                  {allQuotes.map(
-                    (quote) => (
+                  {allQuotes.map((quote) => (
 
-                      <tr
-                        key={quote.id}
-                        className="transition hover:bg-slate-50"
-                      >
-                        <td className="px-6 py-5">
-                          <input
-                            type="checkbox"
-                            name="ids"
-                            value={quote.id}
-                            form="bulk-delete-form"
-                            className="h-5 w-5 rounded border-slate-300 text-red-600 focus:ring-red-500"
-                          />
-                        </td>
-                        {/* Company */}
+                    <tr
+                      key={quote.id}
+                      className="transition hover:bg-slate-50"
+                    >
 
-                        <td className="px-6 py-5">
+                      {/* SELECT */}
 
-                          <p className="font-bold text-slate-900">
-                            {quote.company_name ||
-                              "—"}
-                          </p>
+                      <td className="px-6 py-5">
 
+                        <input
+                          type="checkbox"
+                          value={quote.id}
+                          data-quote-checkbox="true"
+                          className="quote-checkbox h-5 w-5 cursor-pointer rounded border-slate-300 text-red-600 focus:ring-red-500"
+                        />
+
+                      </td>
+
+
+                      {/* COMPANY */}
+
+                      <td className="px-6 py-5">
+
+                        <p className="font-bold text-slate-900">
+                          {quote.company_name || "—"}
+                        </p>
+
+                        <p className="mt-1 text-xs text-slate-400">
+                          {quote.email || "No email"}
+                        </p>
+
+                      </td>
+
+
+                      {/* CONTACT */}
+
+                      <td className="px-6 py-5 text-slate-700">
+                        {quote.contact_name || "—"}
+                      </td>
+
+
+                      {/* PRODUCT */}
+
+                      <td className="px-6 py-5">
+
+                        <p className="font-semibold text-slate-900">
+                          {quote.product || "—"}
+                        </p>
+
+                        {quote.size && (
                           <p className="mt-1 text-xs text-slate-400">
-                            {quote.email ||
-                              "No email"}
+                            {quote.size}
                           </p>
+                        )}
 
-                        </td>
-
-
-                        {/* Contact */}
-
-                        <td className="px-6 py-5 text-slate-700">
-                          {quote.contact_name ||
-                            "—"}
-                        </td>
+                      </td>
 
 
-                        {/* Product */}
+                      {/* QUANTITY */}
 
-                        <td className="px-6 py-5">
-
-                          <p className="font-semibold text-slate-900">
-                            {quote.product ||
-                              "—"}
-                          </p>
-
-                          {quote.size && (
-                            <p className="mt-1 text-xs text-slate-400">
-                              {quote.size}
-                            </p>
-                          )}
-
-                        </td>
+                      <td className="px-6 py-5 font-bold text-slate-900">
+                        {formatQuantity(quote.quantity)}
+                      </td>
 
 
-                        {/* Quantity */}
+                      {/* ARTWORK */}
 
-                        <td className="px-6 py-5 font-bold text-slate-900">
-                          {formatQuantity(
-                            quote.quantity
-                          )}
-                        </td>
+                      <td className="px-6 py-5">
 
+                        {quote.artwork_url ? (
 
-                        {/* Artwork */}
-
-                        <td className="px-6 py-5">
-
-                          {quote.artwork_url ? (
-                            <a
-                              href={
-                                quote.artwork_url
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700"
-                            >
-                              View
-                            </a>
-                          ) : (
-                            <span className="text-sm font-semibold text-slate-400">
-                              None
-                            </span>
-                          )}
-
-                        </td>
-
-
-                        {/* Status */}
-
-                        <td className="px-6 py-5">
-
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1.5 text-xs font-bold ${statusStyle(
-                              quote.status
-                            )}`}
+                          <a
+                            href={quote.artwork_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700"
                           >
-                            {quote.status ||
-                              "Unknown"}
+                            View
+                          </a>
+
+                        ) : (
+
+                          <span className="text-sm font-semibold text-slate-400">
+                            None
                           </span>
 
-                        </td>
+                        )}
+
+                      </td>
 
 
-                        {/* Date */}
+                      {/* STATUS */}
 
-                        <td className="px-6 py-5 text-sm text-slate-500">
-                          {formatDate(
-                            quote.created_at
-                          )}
-                        </td>
+                      <td className="px-6 py-5">
+
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1.5 text-xs font-bold ${statusStyle(
+                            quote.status
+                          )}`}
+                        >
+                          {quote.status || "Unknown"}
+                        </span>
+
+                      </td>
 
 
-                        {/* Action */}
+                      {/* DATE */}
 
-                        <td className="px-6 py-5 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                      <td className="px-6 py-5 text-sm text-slate-500">
+                        {formatDate(quote.created_at)}
+                      </td>
 
-                            <Link
-                              href={`/admin/quotes/${quote.id}`}
-                              className="inline-flex items-center rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-green-600"
-                            >
-                              View Quote →
-                            </Link>
 
-                            <QuoteDeleteControls
-                              quoteId={quote.id}
-                              deleteAction={deleteQuote}
-                            />
+                      {/* ACTION */}
 
-                          </div>
-                        </td>
+                      <td className="px-6 py-5 text-right">
 
-                      </tr>
+                        <div className="flex items-center justify-end gap-2">
 
-                    )
-                  )}
+                          <Link
+                            href={`/admin/quotes/${quote.id}`}
+                            className="inline-flex items-center rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-green-600"
+                          >
+                            View Quote →
+                          </Link>
+
+                          <QuoteDeleteControls
+                            mode="single"
+                            quoteId={quote.id}
+                          />
+
+                        </div>
+
+                      </td>
+
+                    </tr>
+
+                  ))}
 
                 </tbody>
 
@@ -637,155 +516,151 @@ export default async function QuotesPage() {
           </div>
 
 
-          {/* =================================================
-              MOBILE CARDS
-          ================================================= */}
+          {/* MOBILE CARDS */}
 
           <div className="space-y-4 md:hidden">
 
-            {allQuotes.map(
-              (quote) => (
+            {allQuotes.map((quote) => (
 
-                <div
-                  key={quote.id}
-                  className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
-                >
+              <div
+                key={quote.id}
+                className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
 
-                  <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
 
-                    <div className="min-w-0">
+                  <input
+                    type="checkbox"
+                    value={quote.id}
+                    data-quote-checkbox="true"
+                    className="quote-checkbox mt-1 h-5 w-5 shrink-0 cursor-pointer rounded border-slate-300 text-red-600 focus:ring-red-500"
+                  />
 
-                      <p className="truncate text-lg font-black text-slate-950">
-                        {quote.company_name ||
-                          "No Company"}
-                      </p>
+                  <div className="min-w-0 flex-1">
 
-                      <p className="mt-1 truncate text-sm text-slate-500">
-                        {quote.contact_name ||
-                          "—"}
-                      </p>
+                    <div className="flex items-start justify-between gap-4">
 
-                      <p className="mt-1 truncate text-xs text-slate-400">
-                        {quote.email ||
-                          "No email"}
-                      </p>
+                      <div className="min-w-0">
 
-                    </div>
+                        <p className="truncate text-lg font-black text-slate-950">
+                          {quote.company_name || "No Company"}
+                        </p>
 
+                        <p className="mt-1 truncate text-sm text-slate-500">
+                          {quote.contact_name || "—"}
+                        </p>
 
-                    <span
-                      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ${statusStyle(
-                        quote.status
-                      )}`}
-                    >
-                      {quote.status ||
-                        "Unknown"}
-                    </span>
+                        <p className="mt-1 truncate text-xs text-slate-400">
+                          {quote.email || "No email"}
+                        </p>
 
-                  </div>
+                      </div>
 
-
-                  <div className="mt-5 grid grid-cols-2 gap-4">
-
-                    <div>
-
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Product
-                      </p>
-
-                      <p className="mt-1 font-bold text-slate-900">
-                        {quote.product ||
-                          "—"}
-                      </p>
-
-                    </div>
-
-
-                    <div>
-
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Quantity
-                      </p>
-
-                      <p className="mt-1 font-bold text-slate-900">
-                        {formatQuantity(
-                          quote.quantity
-                        )}
-                      </p>
-
-                    </div>
-
-
-                    <div>
-
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Date
-                      </p>
-
-                      <p className="mt-1 font-bold text-slate-900">
-                        {formatDate(
-                          quote.created_at
-                        )}
-                      </p>
-
-                    </div>
-
-
-                    <div>
-
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Artwork
-                      </p>
-
-                      <p className="mt-1 font-bold text-slate-900">
-                        {quote.artwork_url
-                          ? "Received"
-                          : "Not uploaded"}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-
-                  <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-
-                    <Link
-                      href={`/admin/quotes/${quote.id}`}
-                      className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white transition hover:bg-green-600"
-                    >
-                      View Quote
-                    </Link>
-
-
-                    {quote.artwork_url && (
-                      <a
-                        href={
-                          quote.artwork_url
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex min-h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-green-500 hover:text-green-700"
+                      <span
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ${statusStyle(
+                          quote.status
+                        )}`}
                       >
-                        View Artwork
-                      </a>
-                    )}
+                        {quote.status || "Unknown"}
+                      </span>
+
+                    </div>
+
+
+                    <div className="mt-5 grid grid-cols-2 gap-4">
+
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Product
+                        </p>
+
+                        <p className="mt-1 font-bold text-slate-900">
+                          {quote.product || "—"}
+                        </p>
+                      </div>
+
+
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Quantity
+                        </p>
+
+                        <p className="mt-1 font-bold text-slate-900">
+                          {formatQuantity(quote.quantity)}
+                        </p>
+                      </div>
+
+
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Date
+                        </p>
+
+                        <p className="mt-1 font-bold text-slate-900">
+                          {formatDate(quote.created_at)}
+                        </p>
+                      </div>
+
+
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Artwork
+                        </p>
+
+                        <p className="mt-1 font-bold text-slate-900">
+                          {quote.artwork_url
+                            ? "Received"
+                            : "Not uploaded"}
+                        </p>
+                      </div>
+
+                    </div>
+
+
+                    <div className="mt-5 flex flex-col gap-3">
+
+                      <Link
+                        href={`/admin/quotes/${quote.id}`}
+                        className="flex min-h-11 items-center justify-center rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white transition hover:bg-green-600"
+                      >
+                        View Quote
+                      </Link>
+
+
+                      {quote.artwork_url && (
+                        <a
+                          href={quote.artwork_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-green-500 hover:text-green-700"
+                        >
+                          View Artwork
+                        </a>
+                      )}
+
+
+                      <QuoteDeleteControls
+                        mode="single"
+                        quoteId={quote.id}
+                      />
+
+                    </div>
 
                   </div>
 
                 </div>
 
-              )
-            )}
+              </div>
+
+            ))}
 
           </div>
 
 
-          {/* =================================================
-              EMPTY STATE
-          ================================================= */}
+          {/* EMPTY STATE */}
 
           {allQuotes.length === 0 && (
+
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
 
               <div className="text-4xl">
@@ -797,8 +672,7 @@ export default async function QuotesPage() {
               </h3>
 
               <p className="mt-2 text-slate-500">
-                New customer quote requests
-                will appear here.
+                New customer quote requests will appear here.
               </p>
 
               <Link
@@ -809,6 +683,7 @@ export default async function QuotesPage() {
               </Link>
 
             </div>
+
           )}
 
         </div>
