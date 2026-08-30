@@ -101,6 +101,16 @@ export async function POST(req: Request) {
       message,
       artwork_url,
       artwork_path,
+
+      /*
+       * Customer's browser timezone.
+       *
+       * Examples:
+       * Africa/Johannesburg
+       * Europe/London
+       * America/New_York
+       */
+      customer_timezone,
     } = body;
 
     /*
@@ -167,6 +177,31 @@ export async function POST(req: Request) {
 
     /*
      * ---------------------------------------------------------
+     * CUSTOMER TIMEZONE
+     * ---------------------------------------------------------
+     *
+     * We do NOT use IP location.
+     *
+     * The customer's browser supplies its IANA timezone,
+     * for example:
+     *
+     * Africa/Johannesburg
+     * Europe/London
+     * America/New_York
+     *
+     * The timezone is only used when displaying dates/times.
+     * The actual timestamp will continue to be stored normally
+     * by Supabase.
+     */
+
+    const cleanCustomerTimezone =
+      typeof customer_timezone === "string" &&
+      customer_timezone.trim()
+        ? customer_timezone.trim()
+        : null;
+
+    /*
+     * ---------------------------------------------------------
      * INSERT QUOTE
      * ---------------------------------------------------------
      */
@@ -196,6 +231,13 @@ export async function POST(req: Request) {
        * Guest customers have NULL here.
        */
       customer_id: userId,
+
+      /*
+       * Save the timezone of the browser that submitted
+       * the quote.
+       */
+      customer_timezone:
+        cleanCustomerTimezone,
     };
 
     const { data, error } = await supabase

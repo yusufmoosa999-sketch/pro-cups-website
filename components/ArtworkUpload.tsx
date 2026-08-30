@@ -100,6 +100,32 @@ export default function ArtworkUpload() {
       }
 
       /*
+       * -------------------------------------------------------
+       * CUSTOMER TIMEZONE
+       * -------------------------------------------------------
+       *
+       * Automatically detect the timezone from the customer's
+       * browser.
+       *
+       * Examples:
+       *
+       * South Africa:
+       * Africa/Johannesburg
+       *
+       * United Kingdom:
+       * Europe/London
+       *
+       * United States:
+       * America/New_York
+       *
+       * This allows the quote system to know the local timezone
+       * of the person who submitted the request.
+       */
+
+      const customerTimezone =
+        Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      /*
        * Submit quote.
        */
 
@@ -122,13 +148,20 @@ export default function ArtworkUpload() {
           quantity: Number(quantity),
           message,
           artwork_url: artworkUrl,
+
+          /*
+           * Send the customer's browser timezone to the API.
+           */
+          customer_timezone: customerTimezone,
         }),
       });
 
       const result = await response.json();
 
       /*
-       * Customer needs to be logged in.
+       * Guest quote requests are allowed.
+       *
+       * There should be no forced login here.
        */
 
       if (response.status === 401) {
