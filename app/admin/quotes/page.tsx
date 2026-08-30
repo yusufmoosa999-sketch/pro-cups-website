@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+import QuoteDeleteControls from "@/components/admin/QuoteDeleteControls";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,6 +15,48 @@ const supabase = createClient(
     },
   }
 );
+
+async function deleteQuote(formData: FormData) {
+  "use server";
+
+  const id = formData.get("id");
+
+  if (!id || typeof id !== "string") {
+    throw new Error("Invalid quote ID.");
+  }
+
+  const { error } = await supabase
+    .from("quote_requests")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Delete quote error:", error);
+    throw new Error("Failed to delete quote.");
+  }
+}
+
+async function deleteSelectedQuotes(formData: FormData) {
+  "use server";
+
+  const ids = formData
+    .getAll("ids")
+    .filter((id): id is string => typeof id === "string");
+
+  if (ids.length === 0) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from("quote_requests")
+    .delete()
+    .in("id", ids);
+
+  if (error) {
+    console.error("Bulk delete quotes error:", error);
+    throw new Error("Failed to delete selected quotes.");
+  }
+}
 
 export default async function QuotesPage() {
   /*
@@ -343,6 +386,39 @@ export default async function QuotesPage() {
               Customer Quotes
             </h2>
 
+            <form
+              id="bulk-delete-form"
+              action={async (formData) => {
+                const ids = formData.getAll("ids");
+
+                if (ids.length === 0) {
+                  alert("Please select at least one quote to delete.");
+                  return;
+                }
+
+                const confirmed = window.confirm(
+                  `Are you sure you want to permanently delete ${ids.length} selected quote${ids.length === 1 ? "" : "s"
+                  }?`
+                );
+
+                if (!confirmed) return;
+
+                await deleteSelectedQuotes(formData);
+              }}
+              className="mt-4 flex flex-wrap items-center gap-3"
+            >
+              <button
+                type="submit"
+                className="rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-700"
+              >
+                Delete Selected
+              </button>
+
+              <span className="text-sm text-slate-500">
+                Select the test quotes you want to remove.
+              </span>
+            </form>
+
             <p className="text-sm text-slate-500">
               Showing {totalQuotes} request
               {totalQuotes === 1
@@ -366,6 +442,10 @@ export default async function QuotesPage() {
                 <thead className="bg-slate-950 text-white">
 
                   <tr>
+
+                    <th className="px-6 py-5 text-left text-sm font-bold">
+                      Select
+                    </th>
 
                     <th className="px-6 py-5 text-left text-sm font-bold">
                       Company
@@ -413,7 +493,15 @@ export default async function QuotesPage() {
                         key={quote.id}
                         className="transition hover:bg-slate-50"
                       >
-
+                        <td className="px-6 py-5">
+                          <input
+                            type="checkbox"
+                            name="ids"
+                            value={quote.id}
+                            form="bulk-delete-form"
+                            className="h-5 w-5 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                          />
+                        </td>
                         {/* Company */}
 
                         <td className="px-6 py-5">
@@ -518,14 +606,21 @@ export default async function QuotesPage() {
                         {/* Action */}
 
                         <td className="px-6 py-5 text-right">
+                          <div className="flex items-center justify-end gap-2">
 
-                          <Link
-                            href={`/admin/quotes/${quote.id}`}
-                            className="inline-flex items-center rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-green-600"
-                          >
-                            View Quote →
-                          </Link>
+                            <Link
+                              href={`/admin/quotes/${quote.id}`}
+                              className="inline-flex items-center rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-green-600"
+                            >
+                              View Quote →
+                            </Link>
 
+                            <QuoteDeleteControls
+                              quoteId={quote.id}
+                              deleteAction={deleteQuote}
+                            />
+
+                          </div>
                         </td>
 
                       </tr>
