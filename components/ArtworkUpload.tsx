@@ -246,11 +246,10 @@ export default function ArtworkUpload() {
               className="h-[68px] rounded-2xl border border-slate-700 bg-slate-900/70 px-6 text-lg font-medium text-white outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
             >
               <option value="">Select Product *</option>
-              <option>Kraft Vertical Ripple</option>
-              <option>Black Vertical Ripple</option>
-              <option>Coffee Bean Vertical Ripple</option>
-              <option>Kraft Double Wall</option>
-              <option>White Double Wall</option>
+              <option>250ml Single Wall</option>
+              <option>250ml Double Wall</option>
+              <option>350ml Single Wall</option>
+              <option>350ml Double Wall</option>
             </select>
 
             <input
