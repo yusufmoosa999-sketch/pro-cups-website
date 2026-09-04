@@ -269,8 +269,16 @@ export default async function QuoteDetails({
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
 
               <SummaryCard
-                label="Product"
-                value={quote.product || "Not specified"}
+                label="Products"
+                value={
+                  Array.isArray(quote.quote_items) &&
+                  quote.quote_items.length > 0
+                    ? quote.quote_items
+                        .map((item: { product?: string }) => item.product)
+                        .filter(Boolean)
+                        .join(" • ")
+                    : quote.product || "Not specified"
+                }
               />
 
               <SummaryCard
@@ -279,10 +287,23 @@ export default async function QuoteDetails({
               />
 
               <SummaryCard
-                label="Quantity"
-                value={formatQuantity(
-                  quote.quantity
-                )}
+                label="Quantities"
+                value={
+                  Array.isArray(quote.quote_items) &&
+                  quote.quote_items.length > 0
+                    ? quote.quote_items
+                        .map(
+                          (item: {
+                            product?: string;
+                            quantity?: number | string;
+                          }) =>
+                            `${item.product || "Product"}: ${formatQuantity(
+                              item.quantity
+                            )}`
+                        )
+                        .join(" • ")
+                    : formatQuantity(quote.quantity)
+                }
               />
 
               <SummaryCard
@@ -466,21 +487,51 @@ export default async function QuoteDetails({
 
             <div className="mt-7 grid gap-6 sm:grid-cols-2">
 
-              <Info
-                title="Product"
-                value={quote.product}
-              />
+              <div className="sm:col-span-2">
+                <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+                  Products & Quantities
+                </p>
+
+                <div className="mt-3 space-y-2">
+                  {Array.isArray(quote.quote_items) &&
+                  quote.quote_items.length > 0 ? (
+                    quote.quote_items.map(
+                      (
+                        item: {
+                          product?: string;
+                          quantity?: number | string;
+                        },
+                        index: number
+                      ) => (
+                        <div
+                          key={`${item.product || "product"}-${index}`}
+                          className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <span className="font-bold text-slate-900">
+                            {item.product || "Product"}
+                          </span>
+                          <span className="text-sm font-black text-slate-600">
+                            Qty: {formatQuantity(item.quantity)}
+                          </span>
+                        </div>
+                      )
+                    )
+                  ) : (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <span className="font-bold text-slate-900">
+                        {quote.product || "Not specified"}
+                      </span>
+                      <span className="ml-2 text-sm font-black text-slate-600">
+                        Qty: {formatQuantity(quote.quantity)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <Info
                 title="Size"
                 value={quote.size}
-              />
-
-              <Info
-                title="Quantity"
-                value={formatQuantity(
-                  quote.quantity
-                )}
               />
 
               <Info
@@ -615,8 +666,10 @@ export default async function QuoteDetails({
             <QuoteEditor
               quoteId={quote.id}
               quantity={quote.quantity}
+              initialProduct={quote.product}
               initialUnitPrice={quote.unit_price}
               initialNotes={quote.quotation_notes}
+              initialQuoteItems={quote.quote_items}
             />
 
           </div>

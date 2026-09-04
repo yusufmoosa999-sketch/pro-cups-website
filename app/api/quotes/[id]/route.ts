@@ -64,6 +64,7 @@ export async function PATCH(
       total_amount,
       quotation_notes,
       quotation_created_at,
+      quote_items,
     } = body;
 
     // Build the update object only with fields that were provided.
@@ -98,6 +99,39 @@ export async function PATCH(
 
     if (quotation_created_at !== undefined) {
       updates.quotation_created_at = quotation_created_at;
+    }
+
+    // MULTI-PRODUCT QUOTE ITEMS
+    // Stored as JSONB so each quote can contain multiple products,
+    // quantities and unit prices without changing the existing quote columns.
+    if (quote_items !== undefined) {
+      if (!Array.isArray(quote_items)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Quote items must be an array.",
+          },
+          { status: 400 }
+        );
+      }
+
+      const cleanedQuoteItems = quote_items
+        .map((item: any) => ({
+          product: String(item?.product || "").trim(),
+          size: String(item?.size || "").trim(),
+          quantity: Number(item?.quantity || 0),
+          unit_price:
+            item?.unit_price === null || item?.unit_price === undefined || item?.unit_price === ""
+              ? null
+              : Number(item.unit_price),
+          line_total:
+            item?.line_total === null || item?.line_total === undefined || item?.line_total === ""
+              ? null
+              : Number(item.line_total),
+        }))
+        .filter((item: any) => item.product && item.quantity > 0);
+
+      updates.quote_items = cleanedQuoteItems;
     }
 
     // Make sure something was actually sent.
@@ -168,17 +202,58 @@ export async function PATCH(
                 accessToken
               )}`;
 
-            const product = String(
-              data.product || "Paper Cups"
-            );
+            // Use the new multi-product quote items when available.
+            // Fall back to the existing product/size/quantity columns so
+            // older quotes continue to work exactly as before.
+            const rawQuoteItems = Array.isArray(data.quote_items)
+              ? data.quote_items
+              : [];
 
-            const size = String(
-              data.size || "Not provided"
-            );
+            const quotationItems = rawQuoteItems.length > 0
+              ? rawQuoteItems
+              : [
+                  {
+                    product: String(data.product || "Paper Cups"),
+                    size: String(data.size || "Not provided"),
+                    quantity: Number(data.quantity || 0),
+                    unit_price: Number(data.unit_price || 0),
+                    line_total: Number(data.subtotal || 0),
+                  },
+                ];
 
-            const quantity = Number(
-              data.quantity || 0
-            );
+            const quotationItemsHtml = quotationItems
+              .map((item: any) => {
+                const itemProduct = String(item?.product || "Paper Cups");
+                const itemSize = String(item?.size || "Not provided");
+                const itemQuantity = Number(item?.quantity || 0);
+                const itemUnitPrice = Number(item?.unit_price || 0);
+                const itemLineTotal = Number(
+                  item?.line_total ?? itemQuantity * itemUnitPrice
+                );
+
+                return `
+                  <div style="margin: 0 0 18px; padding-bottom: 18px; border-bottom: 1px solid #e5e7eb;">
+                    <p style="margin: 0 0 7px; color: #111827; font-size: 16px; font-weight: 700;">
+                      ${escapeHtml(itemProduct)}
+                    </p>
+                    <p style="margin: 0 0 5px; color: #4b5563; font-size: 14px;">
+                      <strong>Size:</strong> ${escapeHtml(itemSize)}
+                    </p>
+                    <p style="margin: 0 0 5px; color: #4b5563; font-size: 14px;">
+                      <strong>Quantity:</strong> ${itemQuantity.toLocaleString("en-ZA")}
+                    </p>
+                    ${itemUnitPrice > 0 ? `
+                    <p style="margin: 0 0 5px; color: #4b5563; font-size: 14px;">
+                      <strong>Unit Price:</strong> ${formatCurrency(itemUnitPrice)}
+                    </p>` : ""}
+                    ${itemLineTotal > 0 ? `
+                    <p style="margin: 0; color: #008f3c; font-size: 14px; font-weight: 700;">
+                      Line Total: ${formatCurrency(itemLineTotal)}
+                    </p>` : ""}
+                  </div>
+                `;
+              })
+              .join("");
 
             const notes = String(
               data.quotation_notes || ""
@@ -337,38 +412,7 @@ export async function PATCH(
             Quotation Summary
           </p>
 
-          <p
-            style="
-              margin: 0 0 10px;
-              color: #374151;
-              font-size: 15px;
-            "
-          >
-            <strong>Product:</strong>
-            ${escapeHtml(product)}
-          </p>
-
-          <p
-            style="
-              margin: 0 0 10px;
-              color: #374151;
-              font-size: 15px;
-            "
-          >
-            <strong>Size:</strong>
-            ${escapeHtml(size)}
-          </p>
-
-          <p
-            style="
-              margin: 0;
-              color: #374151;
-              font-size: 15px;
-            "
-          >
-            <strong>Quantity:</strong>
-            ${quantity.toLocaleString("en-ZA")}
-          </p>
+          ${quotationItemsHtml}
 
           <div
             style="

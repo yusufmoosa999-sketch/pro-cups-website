@@ -14,6 +14,10 @@ export default function ArtworkUpload() {
   const [phone, setPhone] = useState("");
   const [product, setProduct] = useState("");
   const [quantity, setQuantity] = useState("");
+
+  const [additionalProducts, setAdditionalProducts] = useState<
+    { product: string; quantity: string }[]
+  >([]);
   const [message, setMessage] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -100,32 +104,6 @@ export default function ArtworkUpload() {
       }
 
       /*
-       * -------------------------------------------------------
-       * CUSTOMER TIMEZONE
-       * -------------------------------------------------------
-       *
-       * Automatically detect the timezone from the customer's
-       * browser.
-       *
-       * Examples:
-       *
-       * South Africa:
-       * Africa/Johannesburg
-       *
-       * United Kingdom:
-       * Europe/London
-       *
-       * United States:
-       * America/New_York
-       *
-       * This allows the quote system to know the local timezone
-       * of the person who submitted the request.
-       */
-
-      const customerTimezone =
-        Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-      /*
        * Submit quote.
        */
 
@@ -146,22 +124,22 @@ export default function ArtworkUpload() {
           phone,
           product,
           quantity: Number(quantity),
+          quote_items: [
+            { product, quantity: Number(quantity) },
+            ...additionalProducts.map((item) => ({
+              product: item.product,
+              quantity: Number(item.quantity),
+            })),
+          ],
           message,
           artwork_url: artworkUrl,
-
-          /*
-           * Send the customer's browser timezone to the API.
-           */
-          customer_timezone: customerTimezone,
         }),
       });
 
       const result = await response.json();
 
       /*
-       * Guest quote requests are allowed.
-       *
-       * There should be no forced login here.
+       * Customer needs to be logged in.
        */
 
       if (response.status === 401) {
@@ -200,6 +178,7 @@ export default function ArtworkUpload() {
       setPhone("");
       setProduct("");
       setQuantity("");
+      setAdditionalProducts([]);
       setMessage("");
 
       setPreview(null);
@@ -404,35 +383,34 @@ export default function ArtworkUpload() {
 
             {/* PRODUCT */}
 
-            <select
-              value={product}
-              onChange={(e) =>
-                setProduct(e.target.value)
-              }
-              className="h-[68px] rounded-2xl border border-slate-700 bg-slate-900/70 px-6 text-lg font-medium text-white outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
-            >
+            <div>
+              <select
+                value={product}
+                onChange={(e) =>
+                  setProduct(e.target.value)
+                }
+                className="h-[68px] w-full rounded-2xl border border-slate-700 bg-slate-900/70 px-6 text-lg font-medium text-white outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
+              >
+                <option value="">Select Product *</option>
+                <option>250ml Single Wall</option>
+                <option>250ml Double Wall</option>
+                <option>350ml Single Wall</option>
+                <option>350ml Double Wall</option>
+              </select>
 
-              <option value="">
-                Select Product *
-              </option>
-
-              <option>
-                250ml Single Wall
-              </option>
-
-              <option>
-                250ml Double Wall
-              </option>
-
-              <option>
-                350ml Single Wall
-              </option>
-
-              <option>
-                350ml Double Wall
-              </option>
-
-            </select>
+              <button
+                type="button"
+                onClick={() =>
+                  setAdditionalProducts((current) => [
+                    ...current,
+                    { product: "", quantity: "" },
+                  ])
+                }
+                className="mt-3 inline-flex min-h-10 items-center rounded-xl border border-green-500/50 bg-green-500/10 px-4 py-2 text-sm font-bold text-green-300 transition hover:border-green-400 hover:bg-green-500/20"
+              >
+                + Add Product
+              </button>
+            </div>
 
             {/* QUANTITY */}
 
@@ -444,6 +422,61 @@ export default function ArtworkUpload() {
               placeholder="Estimated Quantity"
               className="h-[68px] rounded-2xl border border-slate-700 bg-slate-900/70 px-6 text-lg font-medium text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
             />
+
+            {additionalProducts.map((item, index) => (
+              <div key={index} className="contents">
+                <div className="lg:col-span-1">
+                  <select
+                    value={item.product}
+                    onChange={(e) =>
+                      setAdditionalProducts((current) =>
+                        current.map((productItem, itemIndex) =>
+                          itemIndex === index
+                            ? { ...productItem, product: e.target.value }
+                            : productItem
+                        )
+                      )
+                    }
+                    className="h-[68px] w-full rounded-2xl border border-green-500/40 bg-slate-900/70 px-6 text-lg font-medium text-white outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
+                  >
+                    <option value="">Select Additional Product *</option>
+                    <option>250ml Single Wall</option>
+                    <option>250ml Double Wall</option>
+                    <option>350ml Single Wall</option>
+                    <option>350ml Double Wall</option>
+                  </select>
+                </div>
+
+                <div className="relative">
+                  <input
+                    value={item.quantity}
+                    onChange={(e) =>
+                      setAdditionalProducts((current) =>
+                        current.map((productItem, itemIndex) =>
+                          itemIndex === index
+                            ? { ...productItem, quantity: e.target.value }
+                            : productItem
+                        )
+                      )
+                    }
+                    placeholder="Estimated Quantity"
+                    className="h-[68px] w-full rounded-2xl border border-green-500/40 bg-slate-900/70 px-6 pr-12 text-lg font-medium text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-green-500 focus:bg-slate-900 focus:ring-4 focus:ring-green-500/20"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAdditionalProducts((current) =>
+                        current.filter((_, itemIndex) => itemIndex !== index)
+                      )
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-red-400 hover:text-red-300"
+                    aria-label="Remove product"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            ))}
 
             {/* MESSAGE */}
 

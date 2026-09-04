@@ -101,6 +101,7 @@ export async function POST(req: Request) {
       message,
       artwork_url,
       artwork_path,
+      quote_items,
 
       /*
        * Customer's browser timezone.
@@ -139,6 +140,92 @@ export async function POST(req: Request) {
 
     const cleanMessage =
       String(message || "").trim();
+
+    /*
+     * ---------------------------------------------------------
+     * MULTI-PRODUCT QUOTE ITEMS
+     * ---------------------------------------------------------
+     *
+     * The original product and quantity fields are retained for
+     * backwards compatibility with existing quotes and database
+     * logic. New quote requests can additionally send quote_items
+     * containing one or more products with their own quantities.
+     *
+     * Expected format:
+     * [
+     *   { product: "250ml Single Wall", quantity: 1000 },
+     *   { product: "350ml Double Wall", quantity: 500 }
+     * ]
+     */
+
+    const allowedProducts = [
+      "250ml Single Wall",
+      "250ml Double Wall",
+      "350ml Single Wall",
+      "350ml Double Wall",
+    ];
+
+    let cleanQuoteItems: Array<{
+      product: string;
+      quantity: number;
+    }> = [];
+
+    if (Array.isArray(quote_items)) {
+      cleanQuoteItems = quote_items
+        .map((item: unknown) => {
+          if (!item || typeof item !== "object") return null;
+
+          const itemRecord = item as Record<string, unknown>;
+          const itemProduct = String(
+            itemRecord.product || ""
+          ).trim();
+
+          const itemQuantity = Number(
+            itemRecord.quantity
+          );
+
+          if (
+            !allowedProducts.includes(itemProduct) ||
+            !Number.isFinite(itemQuantity) ||
+            itemQuantity <= 0
+          ) {
+            return null;
+          }
+
+          return {
+            product: itemProduct,
+            quantity: itemQuantity,
+          };
+        })
+        .filter(
+          (
+            item
+          ): item is {
+            product: string;
+            quantity: number;
+          } => item !== null
+        );
+    }
+
+    /*
+     * If the new multi-product field was not supplied, preserve
+     * the existing single-product request exactly as before.
+     */
+    if (cleanQuoteItems.length === 0 && cleanProduct) {
+      const legacyQuantity = Number(quantity);
+
+      if (
+        Number.isFinite(legacyQuantity) &&
+        legacyQuantity > 0
+      ) {
+        cleanQuoteItems = [
+          {
+            product: cleanProduct,
+            quantity: legacyQuantity,
+          },
+        ];
+      }
+    }
 
     /*
      * Email is REQUIRED for quote requests.
@@ -238,6 +325,13 @@ export async function POST(req: Request) {
        */
       customer_timezone:
         cleanCustomerTimezone,
+
+      /*
+       * Store all requested products and their quantities.
+       * The legacy product/quantity columns above remain populated
+       * so existing parts of the application continue to work.
+       */
+      quote_items: cleanQuoteItems,
     };
 
     const { data, error } = await supabase
@@ -265,6 +359,66 @@ export async function POST(req: Request) {
       "Quote created successfully:",
       data.id
     );
+
+    /*
+     * ---------------------------------------------------------
+     * EMAIL PRODUCT SUMMARY
+     * ---------------------------------------------------------
+     */
+
+    const emailQuoteItems =
+      cleanQuoteItems.length > 0
+        ? cleanQuoteItems
+        : cleanProduct
+          ? [
+              {
+                product: cleanProduct,
+                quantity: Number(quantity) || 0,
+              },
+            ]
+          : [];
+
+    const emailProductRows =
+      emailQuoteItems.length > 0
+        ? emailQuoteItems
+            .map(
+              (item) => `
+                <tr>
+                  <td style="
+                    padding:12px 14px;
+                    border-bottom:1px solid #e5e7eb;
+                    color:#111827;
+                    font-size:14px;
+                  ">
+                    ${escapeHtml(item.product)}
+                  </td>
+                  <td style="
+                    padding:12px 14px;
+                    border-bottom:1px solid #e5e7eb;
+                    color:#111827;
+                    font-size:14px;
+                    text-align:right;
+                    white-space:nowrap;
+                  ">
+                    ${escapeHtml(
+                      Number(item.quantity).toLocaleString("en-ZA")
+                    )}
+                  </td>
+                </tr>
+              `
+            )
+            .join("")
+        : `
+            <tr>
+              <td colspan="2" style="
+                padding:12px 14px;
+                color:#6b7280;
+                font-size:14px;
+              ">
+                No products specified.
+              </td>
+            </tr>
+          `;
 
     /*
      * ---------------------------------------------------------
@@ -425,11 +579,24 @@ export async function POST(req: Request) {
                       padding:16px 20px;
                       border-bottom:1px solid #e5e7eb;
                     ">
-                      <strong>Product</strong><br />
-                      ${escapeHtml(
-                        cleanProduct ||
-                          "Not provided"
-                      )}
+                      <strong>Products & Quantities</strong>
+                      <div style="margin-top:12px; overflow:hidden; border:1px solid #e5e7eb; border-radius:10px;">
+                        <table style="width:100%; border-collapse:collapse;">
+                          <thead>
+                            <tr style="background:#f9fafb;">
+                              <th style="padding:10px 14px; text-align:left; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.5px;">
+                                Product
+                              </th>
+                              <th style="padding:10px 14px; text-align:right; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.5px;">
+                                Quantity
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            ${emailProductRows}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
 
                     <div style="
@@ -441,22 +608,6 @@ export async function POST(req: Request) {
                         cleanSize ||
                           "Not provided"
                       )}
-                    </div>
-
-                    <div style="
-                      padding:16px 20px;
-                      border-bottom:1px solid #e5e7eb;
-                    ">
-                      <strong>Quantity</strong><br />
-                      ${
-                        quantity
-                          ? escapeHtml(
-                              Number(quantity).toLocaleString(
-                                "en-ZA"
-                              )
-                            )
-                          : "Not provided"
-                      }
                     </div>
 
                     <div style="
@@ -660,32 +811,28 @@ export async function POST(req: Request) {
                       Request Details
                     </div>
 
-                    <p style="
-                      margin:12px 0 0;
-                      font-size:15px;
-                      line-height:1.7;
-                      color:#111827;
+                    <div style="
+                      margin-top:14px;
+                      overflow:hidden;
+                      border:1px solid #e5e7eb;
+                      border-radius:10px;
                     ">
-                      <strong>Product:</strong>
-                      ${
-                        escapeHtml(
-                          cleanProduct ||
-                            "Not specified"
-                        )
-                      }
-                      <br />
-
-                      <strong>Quantity:</strong>
-                      ${
-                        quantity
-                          ? escapeHtml(
-                              Number(quantity).toLocaleString(
-                                "en-ZA"
-                              )
-                            )
-                          : "Not specified"
-                      }
-                    </p>
+                      <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                          <tr style="background:#ffffff;">
+                            <th style="padding:10px 12px; text-align:left; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.5px;">
+                              Product
+                            </th>
+                            <th style="padding:10px 12px; text-align:right; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.5px;">
+                              Quantity
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${emailProductRows}
+                        </tbody>
+                      </table>
+                    </div>
 
                   </div>
 
