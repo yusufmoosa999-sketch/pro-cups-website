@@ -66,7 +66,6 @@ export default function Navbar() {
           <span className="text-green-700">Cups</span>
         </Link>
 
-
         {/* DESKTOP MENU */}
 
         <div className="hidden items-center gap-8 font-semibold lg:flex">
@@ -86,6 +85,13 @@ export default function Navbar() {
           </Link>
 
           <Link
+            href="/about"
+            className="text-slate-800 transition hover:text-green-700"
+          >
+            About Us
+          </Link>
+
+          <Link
             href="/gallery"
             className="text-slate-800 transition hover:text-green-700"
           >
@@ -99,7 +105,6 @@ export default function Navbar() {
             Contact
           </Link>
 
-
           {!loading && loggedIn && (
             <Link
               href="/portal"
@@ -108,7 +113,6 @@ export default function Navbar() {
               My Account
             </Link>
           )}
-
 
           {!loading && !loggedIn && (
             <Link
@@ -119,14 +123,12 @@ export default function Navbar() {
             </Link>
           )}
 
-
           <Link
             href="/custom-printing"
             className="rounded-full bg-green-700 px-6 py-3 text-white transition hover:bg-green-800"
           >
             Get Quote
           </Link>
-
 
           {!loading && loggedIn && (
             <button
@@ -139,7 +141,6 @@ export default function Navbar() {
           )}
 
         </div>
-
 
         {/* MOBILE MENU BUTTON */}
 
@@ -158,7 +159,6 @@ export default function Navbar() {
         </button>
 
       </div>
-
 
       {/* MOBILE MENU */}
 
@@ -184,6 +184,14 @@ export default function Navbar() {
             </Link>
 
             <Link
+              href="/about"
+              onClick={() => setOpen(false)}
+              className="rounded-xl px-4 py-4 text-lg font-semibold text-black transition hover:bg-green-50 hover:text-green-700"
+            >
+              About Us
+            </Link>
+
+            <Link
               href="/gallery"
               onClick={() => setOpen(false)}
               className="rounded-xl px-4 py-4 text-lg font-semibold text-black transition hover:bg-green-50 hover:text-green-700"
@@ -198,7 +206,6 @@ export default function Navbar() {
             >
               Contact
             </Link>
-
 
             <div className="mt-4 flex flex-col gap-3">
 
@@ -229,7 +236,6 @@ export default function Navbar() {
                   Login
                 </Link>
               )}
-
 
               <Link
                 href="/custom-printing"

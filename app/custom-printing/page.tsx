@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
-import Image from "next/image";
 import ArtworkUpload from "@/components/ArtworkUpload";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -47,14 +46,14 @@ export default function CustomPrinting() {
                 href="/contact"
                 className="rounded-full bg-green-700 px-8 py-4 text-center font-semibold text-white transition hover:bg-green-800"
               >
-                Request Quote
+                Contact Us
               </Link>
 
               <Link
-                href="/products"
+                href="/gallery"
                 className="rounded-full border border-white/30 px-8 py-4 text-center font-semibold transition hover:bg-white hover:text-black"
               >
-                View Cups
+                View Gallery
               </Link>
 
             </div>
@@ -63,19 +62,30 @@ export default function CustomPrinting() {
 
         </section>
 
-        {/* IMAGE */}
+        {/* ARTWORK UPLOAD */}
 
-        <section className="py-16 lg:py-24">
+        <section className="bg-slate-50 py-20">
 
           <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12">
 
-            <Image
-              src="/images/custom-printing.jpg"
-              alt="Custom Printing"
-              width={1400}
-              height={800}
-              className="w-full rounded-[32px] shadow-2xl"
-            />
+            <div className="mb-12 text-center">
+
+              <span className="inline-block rounded-full bg-green-100 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-green-700">
+                Request a Quote
+              </span>
+
+              <h2 className="mt-6 text-3xl font-black text-black sm:text-4xl lg:text-5xl">
+                Upload Your Artwork
+              </h2>
+
+              <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-700">
+                Send us your artwork and cup requirements and we'll prepare
+                your quotation and professional print proof.
+              </p>
+
+            </div>
+
+            <ArtworkUpload />
 
           </div>
 
@@ -83,7 +93,7 @@ export default function CustomPrinting() {
 
         {/* PROCESS */}
 
-        <section className="pb-20">
+        <section className="pb-20 pt-20">
 
           <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-12">
 
@@ -137,13 +147,6 @@ export default function CustomPrinting() {
 
         </section>
 
-       {/* ARTWORK UPLOAD */}
-
-<section className="bg-slate-50 py-20">
-
-  <ArtworkUpload />
-
-</section>
         {/* WHY PRINT WITH US */}
 
         <section className="bg-white py-20 lg:py-28">
@@ -303,7 +306,7 @@ export default function CustomPrinting() {
                 href="/contact"
                 className="rounded-full bg-green-700 px-8 py-4 font-bold text-white transition hover:bg-green-800"
               >
-                Request Quote
+                Contact Us
               </Link>
 
               <Link
@@ -326,4 +329,3 @@ export default function CustomPrinting() {
     </>
   );
 }
-        
