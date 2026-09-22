@@ -3,16 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 
-// Your Google Apps Script backend
-const API_URL = "https://script.google.com/macros/s/AKfycbxIMNQWwpxRVPY6U-pui0_CbfFRbg8fW6srEBQdVcTP7ExZDpMy491dnTBW1uYURZ1bVg/exec";
+// Google Apps Script stock backend
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbxIMNQWwpxRVPY6U-pui0_CbfFRbg8fW6srEBQdVcTP7ExZDpMy491dnTBW1uYURZ1bVg/exec";
 
-// Scanner key from your stock-control system
+// Scanner key
 const SCANNER_KEY = "it788PCVVUNewTCbyeVF3Rgk";
 
+// Production always adds 1 case
 const MODE = "ADD";
 
 export default function ProductionPage() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
+
   const [status, setStatus] = useState("Ready to scan");
   const [scanning, setScanning] = useState(false);
   const [lastProduct, setLastProduct] = useState("");
@@ -22,13 +25,12 @@ export default function ProductionPage() {
   useEffect(() => {
     return () => {
       if (scannerRef.current) {
-        scannerRef.current
-          .stop()
-          .catch(() => {});
+        scannerRef.current.stop().catch(() => {});
       }
     };
   }, []);
 
+  // Send the scanned barcode to Google Apps Script
   const sendScan = (barcode: string) => {
     return new Promise<any>((resolve, reject) => {
       const callbackName =
@@ -76,12 +78,13 @@ export default function ProductionPage() {
     });
   };
 
+  // Called when Code 128 barcode is successfully detected
   const handleScan = async (decodedText: string) => {
     if (busy) return;
 
     setBusy(true);
     setStatus("Recording production...");
-    
+
     try {
       const result = await sendScan(decodedText);
 
@@ -95,56 +98,67 @@ export default function ProductionPage() {
       setLastStock(result.stock);
       setStatus("✓ Production recorded");
 
-      // Pause briefly so the same barcode isn't immediately scanned twice
+      // Prevent the same barcode being scanned repeatedly
       setTimeout(() => {
         setBusy(false);
       }, 1500);
     } catch (error: any) {
+      console.error(error);
       setStatus(error.message || "Connection error");
       setBusy(false);
     }
   };
 
+  // Start phone camera
   const startScanner = async () => {
     if (scanning) return;
 
     try {
       setStatus("Starting camera...");
 
-      const scanner = new Html5Qrcode("production-reader");
+     const scanner = new Html5Qrcode("production-reader", false);
+
       scannerRef.current = scanner;
 
       await scanner.start(
         { facingMode: "environment" },
         {
-          fps: 10,
-          qrbox: { width: 300, height: 180 },
+          fps: 15,
+          qrbox: {
+            width: 350,
+            height: 140,
+          },
           aspectRatio: 1.777778,
-          
         },
         (decodedText) => {
           handleScan(decodedText);
         },
-        () => {}
+        () => {
+          // Ignore unsuccessful frames
+        }
       );
 
       setScanning(true);
-      setStatus("Point the camera at a product barcode");
+      setStatus("Point the camera at a Code 128 barcode");
     } catch (error) {
       console.error(error);
+
       setStatus(
         "Camera could not start. Please allow camera access and try again."
       );
     }
   };
 
+  // Stop phone camera
   const stopScanner = async () => {
     if (!scannerRef.current) return;
 
     try {
       await scannerRef.current.stop();
       scannerRef.current.clear();
-    } catch {}
+    } catch (error) {
+      console.error(error);
+    }
 
     scannerRef.current = null;
     setScanning(false);
@@ -155,6 +169,8 @@ export default function ProductionPage() {
     <main className="min-h-screen bg-slate-100 px-4 py-6">
       <div className="mx-auto max-w-xl">
         <div className="rounded-3xl bg-white p-6 shadow-lg">
+
+          {/* HEADER */}
           <div className="mb-6 text-center">
             <p className="text-sm font-semibold uppercase tracking-widest text-green-600">
               Pro Cups International
@@ -169,11 +185,13 @@ export default function ProductionPage() {
             </p>
           </div>
 
+          {/* CAMERA */}
           <div
             id="production-reader"
             className="overflow-hidden rounded-2xl bg-black"
           />
 
+          {/* START / STOP */}
           {!scanning ? (
             <button
               onClick={startScanner}
@@ -190,14 +208,18 @@ export default function ProductionPage() {
             </button>
           )}
 
+          {/* STATUS */}
           <div className="mt-5 rounded-2xl bg-slate-50 p-5 text-center">
-            <p className="text-sm font-medium text-slate-500">Status</p>
+            <p className="text-sm font-medium text-slate-500">
+              Status
+            </p>
 
             <p className="mt-1 text-lg font-bold text-slate-900">
               {status}
             </p>
           </div>
 
+          {/* LAST SCAN */}
           {lastProduct && (
             <div className="mt-4 rounded-2xl bg-green-50 p-5 text-center">
               <p className="text-sm font-medium text-green-700">
@@ -211,20 +233,25 @@ export default function ProductionPage() {
               {lastStock !== null && (
                 <p className="mt-2 text-lg text-slate-700">
                   Current stock:{" "}
-                  <span className="font-bold">{lastStock} cases</span>
+                  <span className="font-bold">
+                    {lastStock} cases
+                  </span>
                 </p>
               )}
             </div>
           )}
 
+          {/* MODE */}
           <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-center">
             <p className="font-semibold text-green-800">
               PRODUCTION MODE
             </p>
+
             <p className="mt-1 text-sm text-green-700">
               Every successful scan adds exactly 1 case.
             </p>
           </div>
+
         </div>
       </div>
     </main>
