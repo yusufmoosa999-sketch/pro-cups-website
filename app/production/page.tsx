@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  BrowserMultiFormatReader,
-} from "@zxing/browser";
-import {
-  BarcodeFormat,
-  DecodeHintType,
-} from "@zxing/library";
+import Quagga from "@ericblade/quagga2";
 
 // Google Apps Script stock backend
 const API_URL =
@@ -16,39 +10,30 @@ const API_URL =
 // Scanner key
 const SCANNER_KEY = "it788PCVVUNewTCbyeVF3Rgk";
 
-// Production always adds 1 case
+// Production mode = add 1 case
 const MODE = "ADD";
 
 export default function ProductionPage() {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const controlsRef = useRef<any>(null);
-  const readerRef = useRef<BrowserMultiFormatReader | null>(null);
+  const scannerContainerRef = useRef<HTMLDivElement | null>(null);
+  const scannerRunningRef = useRef(false);
+  const busyRef = useRef(false);
 
   const [status, setStatus] = useState("Ready to scan");
   const [scanning, setScanning] = useState(false);
-  const [busy, setBusy] = useState(false);
-
   const [lastProduct, setLastProduct] = useState("");
   const [lastStock, setLastStock] = useState<number | null>(null);
 
-  // Clean up camera when leaving the page
+  // Clean up scanner when leaving page
   useEffect(() => {
     return () => {
       try {
-        controlsRef.current?.stop();
+        if (scannerRunningRef.current) {
+          Quagga.stop();
+          Quagga.offDetected(handleDetected);
+        }
       } catch {}
 
-      const video = videoRef.current;
-
-      if (video?.srcObject) {
-        const stream = video.srcObject as MediaStream;
-
-        stream.getTracks().forEach((track) => {
-          track.stop();
-        });
-
-        video.srcObject = null;
-      }
+      scannerRunningRef.current = false;
     };
   }, []);
 
@@ -65,19 +50,12 @@ export default function ProductionPage() {
 
       const timeout = window.setTimeout(() => {
         cleanup();
-
-        reject(
-          new Error(
-            "The stock system did not respond."
-          )
-        );
+        reject(new Error("The stock system did not respond."));
       }, 10000);
 
       const cleanup = () => {
         window.clearTimeout(timeout);
-
         delete (window as any)[callbackName];
-
         script.remove();
       };
 
@@ -100,168 +78,164 @@ export default function ProductionPage() {
 
       script.onerror = () => {
         cleanup();
-
-        reject(
-          new Error(
-            "Could not connect to the stock system."
-          )
-        );
+        reject(new Error("Could not connect to the stock system."));
       };
 
       document.body.appendChild(script);
     });
   };
 
-  // Barcode was successfully decoded
-  const handleBarcode = async (barcode: string) => {
-    if (busy) return;
+  // Barcode detected by Quagga
+  async function handleDetected(result: any) {
+    if (busyRef.current) return;
 
-    setBusy(true);
+    const code = result?.codeResult?.code;
 
-    setStatus(
-      `Barcode detected: ${barcode}`
-    );
+    if (!code) return;
+
+    console.log("BARCODE DETECTED:", code);
+
+    busyRef.current = true;
+
+    setStatus(`Barcode detected: ${code}`);
 
     try {
-      const result = await sendScan(barcode);
+      const response = await sendScan(code);
 
-      if (!result.ok) {
-        setStatus(
-          result.message || "Scan failed"
-        );
-
-        setBusy(false);
+      if (!response.ok) {
+        setStatus(response.message || "Scan failed");
+        busyRef.current = false;
         return;
       }
 
-      setLastProduct(
-        result.name || barcode
-      );
+      setLastProduct(response.name || code);
+      setLastStock(response.stock);
 
-      setLastStock(result.stock);
+      setStatus("✓ Production recorded");
 
-      setStatus(
-        "✓ Production recorded"
-      );
-
-      // Prevent duplicate scan
+      // Prevent duplicate scans
       setTimeout(() => {
-        setBusy(false);
+        busyRef.current = false;
       }, 2000);
     } catch (error: any) {
       console.error(error);
 
       setStatus(
-        error?.message ||
-          "Could not connect to stock system."
+        error?.message || "Could not connect to stock system."
       );
 
-      setBusy(false);
+      busyRef.current = false;
     }
-  };
+  }
 
-  // Start barcode scanner
+  // Start camera and barcode scanner
   const startScanner = async () => {
-    if (scanning) return;
+    if (scannerRunningRef.current) return;
+
+    if (!scannerContainerRef.current) {
+      setStatus("Scanner area could not be found.");
+      return;
+    }
 
     try {
-      setStatus(
-        "Starting rear camera..."
-      );
+      setStatus("Starting camera...");
 
-      if (!videoRef.current) {
-        setStatus(
-          "Camera element not found."
-        );
+      // Make sure old scanner is stopped
+      try {
+        Quagga.stop();
+        Quagga.offDetected(handleDetected);
+      } catch {}
 
-        return;
-      }
+      Quagga.init(
+        {
+          inputStream: {
+            type: "LiveStream",
 
-      // Only look for Code 128
-      const hints = new Map();
+            target: scannerContainerRef.current,
 
-      hints.set(
-        DecodeHintType.POSSIBLE_FORMATS,
-        [
-          BarcodeFormat.CODE_128,
-        ]
-      );
-
-      const reader =
-        new BrowserMultiFormatReader(
-          hints,
-          {
-            delayBetweenScanAttempts: 200,
-            delayBetweenScanSuccess: 2000,
-          }
-        );
-
-      readerRef.current = reader;
-
-      setStatus(
-        "Opening rear camera..."
-      );
-
-      const controls =
-        await reader.decodeFromConstraints(
-          {
-            audio: false,
-
-            video: {
-              facingMode: {
-                ideal: "environment",
-              },
-
+            constraints: {
+              facingMode: "environment",
               width: {
-                ideal: 1920,
+                min: 640,
+                ideal: 1280,
+                max: 1920,
               },
-
               height: {
-                ideal: 1080,
+                min: 480,
+                ideal: 720,
+                max: 1080,
               },
+            },
 
-              
+            area: {
+              top: "20%",
+              right: "5%",
+              left: "5%",
+              bottom: "20%",
             },
           },
-          videoRef.current,
-          (result, error) => {
-            if (result) {
-              const text =
-                result.getText();
 
-              console.log(
-                "BARCODE DETECTED:",
-                text
-              );
+          locator: {
+            patchSize: "medium",
+            halfSample: false,
+          },
 
-              handleBarcode(text);
-            }
+          locate: true,
 
-            // Ignore normal "not found" frames
-            if (error) {
-              // Do nothing
-            }
+          numOfWorkers: 2,
+
+          frequency: 10,
+
+          decoder: {
+            readers: [
+              "code_128_reader",
+            ],
+
+            multiple: false,
+          },
+
+          
+
+          debug: false,
+        },
+
+        (error) => {
+          if (error) {
+            console.error(
+              "Quagga initialization error:",
+              error
+            );
+
+            setStatus(
+              "Could not start the barcode scanner."
+            );
+
+            scannerRunningRef.current = false;
+            setScanning(false);
+
+            return;
           }
-        );
 
-      controlsRef.current = controls;
+          Quagga.start();
 
-      setScanning(true);
+          scannerRunningRef.current = true;
+          setScanning(true);
+
+          setStatus(
+            "Point the camera at a Code 128 barcode"
+          );
+        }
+      );
+
+      Quagga.onDetected(handleDetected);
+    } catch (error) {
+      console.error(error);
 
       setStatus(
-        "Point the rear camera at the barcode"
-      );
-    } catch (error: any) {
-      console.error(
-        "Scanner error:",
-        error
+        "Could not start the camera scanner."
       );
 
-      setStatus(
-        error?.message ||
-          "Could not start the camera."
-      );
-
+      scannerRunningRef.current = false;
       setScanning(false);
     }
   };
@@ -269,31 +243,16 @@ export default function ProductionPage() {
   // Stop scanner
   const stopScanner = () => {
     try {
-      controlsRef.current?.stop();
+      if (scannerRunningRef.current) {
+        Quagga.stop();
+        Quagga.offDetected(handleDetected);
+      }
     } catch {}
 
-    controlsRef.current = null;
-
-    const video = videoRef.current;
-
-    if (video?.srcObject) {
-      const stream =
-        video.srcObject as MediaStream;
-
-      stream
-        .getTracks()
-        .forEach((track) => {
-          track.stop();
-        });
-
-      video.srcObject = null;
-    }
-
+    scannerRunningRef.current = false;
     setScanning(false);
-
-    setStatus(
-      "Scanner stopped"
-    );
+    setStatus("Scanner stopped");
+    busyRef.current = false;
   };
 
   return (
@@ -315,51 +274,33 @@ export default function ProductionPage() {
             </h1>
 
             <p className="mt-2 text-slate-500">
-              Scan a product barcode to add
-              1 case to stock.
+              Scan a product barcode to add 1 case to stock.
             </p>
 
           </div>
 
-
           {/* CAMERA */}
 
-          <div className="relative overflow-hidden rounded-2xl bg-black">
-
-            <video
-              ref={videoRef}
-              className="block w-full"
-              autoPlay
-              muted
-              playsInline
-            />
-
-            {/* SCAN GUIDE */}
-
-            {scanning && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-
-                <div className="h-32 w-[90%] rounded-xl border-4 border-green-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.25)]">
-
-                </div>
-
-              </div>
-            )}
+          <div
+            ref={scannerContainerRef}
+            className="relative min-h-[320px] overflow-hidden rounded-2xl bg-black"
+          >
 
             {!scanning && (
-              <div className="flex h-64 items-center justify-center text-white">
-
+              <div className="absolute inset-0 flex items-center justify-center text-white">
                 <p className="text-center text-sm">
                   Camera preview will appear here
                 </p>
-
               </div>
+            )}
+
+            {scanning && (
+              <div className="pointer-events-none absolute inset-x-[5%] top-[20%] bottom-[20%] z-10 rounded-xl border-4 border-green-400" />
             )}
 
           </div>
 
-
-          {/* CAMERA BUTTON */}
+          {/* START / STOP */}
 
           {!scanning ? (
 
@@ -381,7 +322,6 @@ export default function ProductionPage() {
 
           )}
 
-
           {/* STATUS */}
 
           <div className="mt-5 rounded-2xl bg-slate-50 p-5 text-center">
@@ -395,7 +335,6 @@ export default function ProductionPage() {
             </p>
 
           </div>
-
 
           {/* LAST SCAN */}
 
@@ -414,13 +353,10 @@ export default function ProductionPage() {
               {lastStock !== null && (
 
                 <p className="mt-2 text-lg text-slate-700">
-
                   Current stock:{" "}
-
                   <span className="font-bold">
                     {lastStock} cases
                   </span>
-
                 </p>
 
               )}
@@ -428,7 +364,6 @@ export default function ProductionPage() {
             </div>
 
           )}
-
 
           {/* MODE */}
 
@@ -445,7 +380,6 @@ export default function ProductionPage() {
           </div>
 
         </div>
-
       </div>
     </main>
   );
