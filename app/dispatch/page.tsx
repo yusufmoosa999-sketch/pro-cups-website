@@ -38,6 +38,18 @@ export default function DispatchPage() {
   const videoRef =
     useRef<HTMLVideoElement | null>(null);
 
+  const streamRef =
+    useRef<MediaStream | null>(null);
+
+  const canvasRef =
+    useRef<HTMLCanvasElement | null>(null);
+
+  const scanTimerRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scanningRef =
+    useRef(false);
+
   const controlsRef =
     useRef<ScannerControls | null>(null);
 
@@ -126,6 +138,19 @@ export default function DispatchPage() {
         // Ignore cleanup errors.
       }
 
+      scanningRef.current = false;
+
+      if (scanTimerRef.current) {
+        clearTimeout(scanTimerRef.current);
+        scanTimerRef.current = null;
+      }
+
+      streamRef.current?.getTracks().forEach((track) => {
+        track.stop();
+      });
+
+      streamRef.current = null;
+
     };
 
   }, []);
@@ -155,6 +180,13 @@ export default function DispatchPage() {
 
   function stopScanner() {
 
+    scanningRef.current = false;
+
+    if (scanTimerRef.current) {
+      clearTimeout(scanTimerRef.current);
+      scanTimerRef.current = null;
+    }
+
     try {
 
       controlsRef.current?.stop();
@@ -163,13 +195,20 @@ export default function DispatchPage() {
       // Ignore camera stop errors.
     }
 
+    controlsRef.current = null;
 
-    controlsRef.current =
-      null;
+    streamRef.current?.getTracks().forEach((track) => {
+      track.stop();
+    });
 
-    setCameraRunning(
-      false
-    );
+    streamRef.current = null;
+
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+    }
+
+    setCameraRunning(false);
 
   }
 
@@ -338,6 +377,128 @@ export default function DispatchPage() {
 
 
   // ==========================================================
+  // SCAN ONLY INSIDE THE GREEN BOX
+  // ==========================================================
+
+  async function scanFrame() {
+
+    if (
+      !scanningRef.current ||
+      processingRef.current
+    ) {
+      return;
+    }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const reader = readerRef.current;
+
+    if (
+      !video ||
+      !canvas ||
+      !reader ||
+      video.readyState < 2 ||
+      video.videoWidth === 0 ||
+      video.videoHeight === 0
+    ) {
+      scanTimerRef.current =
+        setTimeout(scanFrame, 80);
+      return;
+    }
+
+    /*
+     * The visible green box is 12% from the left/right,
+     * 38% from the top and 24% high.
+     *
+     * The video is displayed at the same 16:9 aspect ratio
+     * as the camera frame, so the screen coordinates map
+     * directly to the camera image.
+     *
+     * ZXing receives ONLY this cropped canvas.
+     */
+
+    const cropX =
+      Math.round(video.videoWidth * 0.12);
+
+    const cropWidth =
+      Math.round(video.videoWidth * 0.76);
+
+    const cropY =
+      Math.round(video.videoHeight * 0.38);
+
+    const cropHeight =
+      Math.round(video.videoHeight * 0.24);
+
+    const targetWidth = 1280;
+
+    const targetHeight =
+      Math.max(160, Math.round(
+        cropHeight *
+        (targetWidth / cropWidth)
+      ));
+
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+
+    const context =
+      canvas.getContext("2d", {
+        willReadFrequently: true
+      });
+
+    if (!context) {
+      scanTimerRef.current =
+        setTimeout(scanFrame, 80);
+      return;
+    }
+
+    context.drawImage(
+      video,
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      targetWidth,
+      targetHeight
+    );
+
+    try {
+
+      const result =
+        reader.decodeFromCanvas(canvas);
+
+      if (result) {
+
+        const scannedBarcode =
+          result.getText().trim();
+
+        if (scannedBarcode) {
+
+          scanningRef.current = false;
+
+          await handleBarcode(
+            scannedBarcode
+          );
+
+          return;
+        }
+      }
+
+    } catch {
+      // No barcode found in this frame.
+      // This is normal while the worker is positioning it.
+    }
+
+    if (scanningRef.current) {
+      scanTimerRef.current =
+        setTimeout(scanFrame, 70);
+    }
+
+  }
+
+
+  // ==========================================================
   // START CAMERA
   // ==========================================================
 
@@ -346,25 +507,19 @@ export default function DispatchPage() {
     if (
       processingRef.current
     ) {
-
       return;
-
     }
-
 
     try {
 
       stopScanner();
 
-
       setStatus(
         "Starting camera..."
       );
 
-
       const hints =
-        new Map();
-
+        new Map<DecodeHintType, any>();
 
       hints.set(
         DecodeHintType.POSSIBLE_FORMATS,
@@ -373,94 +528,87 @@ export default function DispatchPage() {
         ]
       );
 
-
       hints.set(
         DecodeHintType.TRY_HARDER,
         true
       );
-
 
       const reader =
         new BrowserMultiFormatReader(
           hints
         );
 
-
       readerRef.current =
         reader;
 
+      if (!videoRef.current) {
+        throw new Error(
+          "Camera element is not ready."
+        );
+      }
+
+      const stream =
+        await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: {
+              ideal: "environment"
+            },
+            width: {
+              ideal: 1920
+            },
+            height: {
+              ideal: 1080
+            }
+          }
+        });
+
+      streamRef.current =
+        stream;
+
+      videoRef.current.srcObject =
+        stream;
+
+      videoRef.current.muted =
+        true;
+
+      videoRef.current.setAttribute(
+        "playsinline",
+        "true"
+      );
+
+      await videoRef.current.play();
+
+      scanningRef.current = true;
 
       setCameraRunning(
         true
       );
 
+      setStatus(
+        "Camera ready — place the barcode completely inside the green box."
+      );
 
-      const controls =
-        await reader.decodeFromConstraints(
-          {
-            video: {
-              facingMode: {
-                ideal:
-                  "environment"
-              },
-
-              width: {
-                ideal: 1920
-              },
-
-              height: {
-                ideal: 1080
-              }
-            }
-          },
-
-          videoRef.current!,
-
-          (result) => {
-
-            if (!result) {
-              return;
-            }
-
-
-            if (
-              processingRef.current
-            ) {
-
-              return;
-
-            }
-
-
-            const scannedBarcode =
-              result
-                .getText()
-                .trim();
-
-
-            if (!scannedBarcode) {
-              return;
-            }
-
-
-            handleBarcode(
-              scannedBarcode
-            );
-
-          }
+      scanTimerRef.current =
+        setTimeout(
+          scanFrame,
+          200
         );
 
-
-      controlsRef.current =
-        controls as ScannerControls;
-
-
     } catch (error) {
+
+      scanningRef.current = false;
+
+      streamRef.current?.getTracks().forEach((track) => {
+        track.stop();
+      });
+
+      streamRef.current = null;
+      readerRef.current = null;
 
       setCameraRunning(
         false
       );
-
 
       setStatus(
         error instanceof Error
@@ -954,10 +1102,13 @@ export default function DispatchPage() {
                     "100%",
 
                   height:
-                    "300px",
+                    "auto",
+
+                  aspectRatio:
+                    "16 / 9",
 
                   objectFit:
-                    "cover"
+                    "fill"
                 }}
               />
 
@@ -1365,6 +1516,14 @@ export default function DispatchPage() {
           </section>
 
         )}
+
+
+        <canvas
+          ref={canvasRef}
+          style={{
+            display: "none"
+          }}
+        />
 
 
         {/* STATUS */}
