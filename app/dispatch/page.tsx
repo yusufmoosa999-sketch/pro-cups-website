@@ -9,114 +9,169 @@ const API =
 
 const SCANNER_KEY = "it788PCVVUNewTCbyeVF3Rgk";
 
-export default function DispatchScannerPage() {
+type ScannerControls = {
+  stop: () => void;
+};
+
+type Product = {
+  barcode: string;
+  name: string;
+  stock: number;
+  opening: number;
+};
+
+export default function DispatchPage() {
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const controlsRef = useRef<{ stop: () => void } | null>(null);
-  const readerRef = useRef<BrowserMultiFormatReader | null>(null);
-  const processingRef = useRef(false);
 
-  const [cameraRunning, setCameraRunning] = useState(false);
-  const [barcode, setBarcode] = useState("");
-  const [product, setProduct] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [stock, setStock] = useState<number | null>(null);
+  const controlsRef =
+    useRef<ScannerControls | null>(null);
 
-  const [status, setStatus] = useState(
-    "Press Start Camera to begin."
-  );
+  const readerRef =
+    useRef<BrowserMultiFormatReader | null>(null);
 
-  const [statusType, setStatusType] = useState<
-    "normal" | "success" | "error"
-  >("normal");
+  const processingRef =
+    useRef(false);
+
+  const quantityRef =
+    useRef<HTMLInputElement | null>(null);
+
+
+  const [cameraRunning, setCameraRunning] =
+    useState(false);
+
+  const [barcode, setBarcode] =
+    useState("");
+
+  const [product, setProduct] =
+    useState("");
+
+  const [quantity, setQuantity] =
+    useState("");
+
+  const [stock, setStock] =
+    useState<number | null>(null);
+
+  const [message, setMessage] =
+    useState("");
+
+  const [messageType, setMessageType] =
+    useState<"normal" | "success" | "error">(
+      "normal"
+    );
+
+  const [loadingProduct, setLoadingProduct] =
+    useState(false);
+
+  const [dispatching, setDispatching] =
+    useState(false);
+
+
+  // ----------------------------------------------------------
+  // AUTO-FOCUS QUANTITY FIELD
+  // ----------------------------------------------------------
 
   useEffect(() => {
+
+    if (barcode && product && !dispatching) {
+
+      // Wait for React to render the input,
+      // then immediately put the cursor inside it.
+      requestAnimationFrame(() => {
+
+        quantityRef.current?.focus();
+
+      });
+
+    }
+
+  }, [barcode, product, dispatching]);
+
+
+  // ----------------------------------------------------------
+  // CLEAN UP CAMERA
+  // ----------------------------------------------------------
+
+  useEffect(() => {
+
     return () => {
-      controlsRef.current?.stop();
-      controlsRef.current = null;
-      readerRef.current = null;
+      stopScanner();
     };
+
   }, []);
 
-  function setMessage(
-    message: string,
+
+  function setStatus(
+    text: string,
     type: "normal" | "success" | "error" = "normal"
   ) {
-    setStatus(message);
-    setStatusType(type);
+
+    setMessage(text);
+    setMessageType(type);
+
   }
+
 
   function stopScanner() {
-    controlsRef.current?.stop();
+
+    try {
+
+      controlsRef.current?.stop();
+
+    } catch (err) {
+      // Ignore camera stop errors.
+    }
+
     controlsRef.current = null;
 
-    readerRef.current = null;
-
     setCameraRunning(false);
+
   }
 
-  function callStockApi(
-    scannedBarcode: string,
-    cases: number
-  ): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const callbackName =
-        "pci_dispatch_" +
-        Date.now() +
-        "_" +
-        Math.floor(Math.random() * 100000);
 
-      const script = document.createElement("script");
+  // ----------------------------------------------------------
+  // GET PRODUCTS
+  // ----------------------------------------------------------
 
-      const cleanup = () => {
-        delete (window as any)[callbackName];
-        script.remove();
-      };
+  async function getProducts(): Promise<Product[]> {
 
-      (window as any)[callbackName] = (data: any) => {
-        cleanup();
+    const response = await fetch(
+      `${API}?action=products`,
+      {
+        cache: "no-store"
+      }
+    );
 
-        if (data?.ok) {
-          resolve(data);
-        } else {
-          reject(
-            new Error(
-              data?.error ||
-                "The stock system rejected the dispatch."
-            )
-          );
-        }
-      };
+    if (!response.ok) {
+      throw new Error(
+        "Could not connect to the stock system."
+      );
+    }
 
-      script.onerror = () => {
-        cleanup();
+    const data = await response.json();
 
-        reject(
-          new Error(
-            "Could not connect to the stock control system."
-          )
-        );
-      };
+    if (!data?.ok || !Array.isArray(data.products)) {
 
-      const url =
-        API +
-        "?action=scan" +
-        "&mode=REMOVE" +
-        "&barcode=" +
-        encodeURIComponent(scannedBarcode) +
-        "&cases=" +
-        encodeURIComponent(String(cases)) +
-        "&key=" +
-        encodeURIComponent(SCANNER_KEY) +
-        "&callback=" +
-        encodeURIComponent(callbackName);
+      throw new Error(
+        data?.error ||
+        "Could not load stock."
+      );
 
-      script.src = url;
+    }
 
-      document.body.appendChild(script);
-    });
+    return data.products;
+
   }
 
-  async function handleBarcode(scannedBarcode: string) {
+
+  // ----------------------------------------------------------
+  // HANDLE BARCODE
+  // ----------------------------------------------------------
+
+  async function handleBarcode(
+    scannedBarcode: string
+  ) {
+
     if (processingRef.current) {
       return;
     }
@@ -125,376 +180,816 @@ export default function DispatchScannerPage() {
 
     setBarcode(scannedBarcode);
 
-    // Stop camera immediately after successful detection.
-    // This prevents the same barcode being detected repeatedly.
     stopScanner();
 
-    setMessage("Barcode detected. Enter the number of cases.");
+    setLoadingProduct(true);
 
-    // We know the barcode is valid because the backend will
-    // identify the product when the dispatch is confirmed.
-    try {
-      const response = await fetch(
-        `${API}?action=products`
-      );
-
-      const data = await response.json();
-
-      if (data?.ok && Array.isArray(data.products)) {
-        const found = data.products.find(
-          (item: any) =>
-            String(item.barcode) === scannedBarcode
-        );
-
-        if (found) {
-          setProduct(found.name);
-          setStock(Number(found.stock));
-        } else {
-          setProduct("");
-          setStock(null);
-          setMessage(
-            "Barcode is not recognised.",
-            "error"
-          );
-          setBarcode("");
-        }
-      } else {
-        setMessage(
-          "Could not retrieve product information.",
-          "error"
-        );
-        setBarcode("");
-      }
-    } catch {
-      setMessage(
-        "Could not retrieve product information.",
-        "error"
-      );
-      setBarcode("");
-    } finally {
-      processingRef.current = false;
-    }
-  }
-
-  async function confirmDispatch() {
-    if (!barcode) {
-      setMessage(
-        "Scan a product barcode first.",
-        "error"
-      );
-      return;
-    }
-
-    const cases = Number(quantity);
-
-    if (!Number.isInteger(cases) || cases <= 0) {
-      setMessage(
-        "Enter a whole number of cases greater than 0.",
-        "error"
-      );
-      return;
-    }
-
-    if (stock !== null && cases > stock) {
-      setMessage(
-        `Cannot dispatch ${cases} cases. Only ${stock} cases are currently in stock.`,
-        "error"
-      );
-      return;
-    }
-
-    processingRef.current = true;
-
-    setMessage(
-      `Dispatching ${cases} case${cases === 1 ? "" : "s"}...`
+    setStatus(
+      "Barcode detected..."
     );
 
     try {
-      const result = await callStockApi(
-        barcode,
-        cases
-      );
 
-      setStock(result.stock);
+      const products =
+        await getProducts();
 
-      setMessage(
-        `✓ ${result.name} — ${cases} case${
-          cases === 1 ? "" : "s"
-        } dispatched`,
-        "success"
-      );
+      const found =
+        products.find(
+          p => p.barcode === scannedBarcode
+        );
 
-      // Clear the scan so the worker must scan again
-      // for the next pallet/order.
-      setBarcode("");
-      setProduct("");
+      if (!found) {
+
+        throw new Error(
+          "Barcode not recognised."
+        );
+
+      }
+
+      setProduct(found.name);
+      setStock(found.stock);
       setQuantity("");
 
+      setStatus(
+        `Enter the number of cases for ${found.name}.`
+      );
+
     } catch (error) {
-      setMessage(
+
+      setBarcode("");
+      setProduct("");
+      setStock(null);
+
+      setStatus(
         error instanceof Error
           ? error.message
-          : "The dispatch could not be completed.",
+          : "Could not load product.",
         "error"
       );
+
     } finally {
+
+      setLoadingProduct(false);
+
       processingRef.current = false;
+
     }
+
   }
 
+
+  // ----------------------------------------------------------
+  // START CAMERA
+  // ----------------------------------------------------------
+
   async function startScanner() {
-    if (!videoRef.current) {
-      setMessage(
-        "Camera element is not ready.",
-        "error"
-      );
+
+    if (processingRef.current) {
       return;
     }
 
-    processingRef.current = false;
-
-    setBarcode("");
-    setProduct("");
-    setQuantity("");
-    setStock(null);
-
-    controlsRef.current?.stop();
-    controlsRef.current = null;
-    readerRef.current = null;
-
-    setCameraRunning(true);
-
-    setMessage("Starting camera...");
-
-    const hints = new Map<DecodeHintType, any>();
-
-    hints.set(
-      DecodeHintType.POSSIBLE_FORMATS,
-      [BarcodeFormat.CODE_128]
-    );
-
-    hints.set(
-      DecodeHintType.TRY_HARDER,
-      true
-    );
-
-    const reader =
-      new BrowserMultiFormatReader(hints);
-
-    readerRef.current = reader;
-
     try {
+
+      stopScanner();
+
+      setStatus(
+        "Starting camera..."
+      );
+
+      const hints = new Map();
+
+      hints.set(
+        DecodeHintType.POSSIBLE_FORMATS,
+        [BarcodeFormat.CODE_128]
+      );
+
+      hints.set(
+        DecodeHintType.TRY_HARDER,
+        true
+      );
+
+      const reader =
+        new BrowserMultiFormatReader(
+          hints
+        );
+
+      readerRef.current = reader;
+
+      setCameraRunning(true);
+
       const controls =
         await reader.decodeFromConstraints(
           {
-            audio: false,
             video: {
               facingMode: {
-                ideal: "environment",
+                ideal: "environment"
               },
               width: {
-                ideal: 1920,
+                ideal: 1920
               },
               height: {
-                ideal: 1080,
-              },
-            },
+                ideal: 1080
+              }
+            }
           },
-          videoRef.current,
+          videoRef.current!,
           (result) => {
+
             if (!result) {
               return;
             }
 
-            const scannedBarcode =
-              result.getText().trim();
-
-            if (!scannedBarcode) {
+            if (processingRef.current) {
               return;
             }
 
-            void handleBarcode(
-              scannedBarcode
-            );
+            const value =
+              result.getText().trim();
+
+            if (!value) {
+              return;
+            }
+
+            // Immediately lock processing before
+            // doing anything else.
+            processingRef.current = true;
+
+            stopScanner();
+
+            handleBarcode(value);
+
           }
         );
 
-      controlsRef.current = controls;
+      controlsRef.current =
+        controls as ScannerControls;
 
-      setMessage(
-        "Camera ready — point it at a product barcode."
-      );
     } catch (error) {
+
       setCameraRunning(false);
 
-      setMessage(
+      setStatus(
         error instanceof Error
-          ? `Camera error: ${error.message}`
-          : "Could not start the camera.",
+          ? error.message
+          : "Could not start camera.",
         "error"
       );
+
     }
+
   }
 
-  function resetForNextDispatch() {
+
+  // ----------------------------------------------------------
+  // JSONP DISPATCH REQUEST
+  // ----------------------------------------------------------
+
+  function callStockApi(
+    scannedBarcode: string,
+    cases: number,
+    requestId: string
+  ): Promise<any> {
+
+    return new Promise(
+      (resolve, reject) => {
+
+        const callbackName =
+          "pci_dispatch_" +
+          Date.now() +
+          "_" +
+          Math.floor(
+            Math.random() * 100000
+          );
+
+        const script =
+          document.createElement("script");
+
+        const cleanup = () => {
+
+          delete (window as any)[
+            callbackName
+          ];
+
+          script.remove();
+
+        };
+
+
+        (window as any)[callbackName] =
+          (data: any) => {
+
+            cleanup();
+
+            if (data?.ok) {
+
+              resolve(data);
+
+            } else {
+
+              reject(
+                new Error(
+                  data?.error ||
+                  "The stock system rejected the dispatch."
+                )
+              );
+
+            }
+
+          };
+
+
+        script.onerror = () => {
+
+          cleanup();
+
+          reject(
+            new Error(
+              "Could not connect to the stock control system."
+            )
+          );
+
+        };
+
+
+        const url =
+          API +
+          "?action=scan" +
+          "&mode=REMOVE" +
+          "&barcode=" +
+          encodeURIComponent(
+            scannedBarcode
+          ) +
+          "&cases=" +
+          encodeURIComponent(
+            String(cases)
+          ) +
+          "&requestId=" +
+          encodeURIComponent(
+            requestId
+          ) +
+          "&key=" +
+          encodeURIComponent(
+            SCANNER_KEY
+          ) +
+          "&callback=" +
+          encodeURIComponent(
+            callbackName
+          );
+
+
+        script.src = url;
+
+        document.body.appendChild(
+          script
+        );
+
+      }
+    );
+
+  }
+
+
+  // ----------------------------------------------------------
+  // CONFIRM DISPATCH
+  // ----------------------------------------------------------
+
+  async function confirmDispatch() {
+
+    if (dispatching) {
+      return;
+    }
+
+    if (!barcode) {
+
+      setStatus(
+        "Scan a barcode first.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const cases =
+      Number(quantity);
+
+
+    if (
+      !Number.isInteger(cases) ||
+      cases <= 0
+    ) {
+
+      setStatus(
+        "Enter a whole number of cases.",
+        "error"
+      );
+
+      quantityRef.current?.focus();
+
+      return;
+
+    }
+
+
+    if (
+      stock !== null &&
+      cases > stock
+    ) {
+
+      setStatus(
+        `Only ${stock} case(s) are currently available.`,
+        "error"
+      );
+
+      quantityRef.current?.focus();
+
+      return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // LOCK IMMEDIATELY
+    // --------------------------------------------------------
+
+    processingRef.current = true;
+
+    setDispatching(true);
+
+    setStatus(
+      `Dispatching ${cases} case${cases === 1 ? "" : "s"}...`
+    );
+
+
+    // Unique ID for THIS exact dispatch.
+    // If the same request reaches Google again,
+    // Google will recognise it and not deduct again.
+    const requestId =
+      typeof crypto !== "undefined" &&
+      typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random()}`;
+
+
+    try {
+
+      const result =
+        await callStockApi(
+          barcode,
+          cases,
+          requestId
+        );
+
+
+      setStock(result.stock);
+
+      setStatus(
+        `✓ ${result.name} — ${cases} case${cases === 1 ? "" : "s"} dispatched`,
+        "success"
+      );
+
+
+      // Clear the current dispatch.
+      setBarcode("");
+      setProduct("");
+      setQuantity("");
+      setStock(null);
+
+
+    } catch (error) {
+
+      setStatus(
+        error instanceof Error
+          ? error.message
+          : "Dispatch failed.",
+        "error"
+      );
+
+    } finally {
+
+      setDispatching(false);
+
+      processingRef.current = false;
+
+    }
+
+  }
+
+
+  // ----------------------------------------------------------
+  // RESET
+  // ----------------------------------------------------------
+
+  function dispatchAnother() {
+
+    stopScanner();
+
     setBarcode("");
     setProduct("");
     setQuantity("");
     setStock(null);
 
-    setMessage(
-      "Press Start Camera to scan the next product."
-    );
+    setMessage("");
+    setMessageType("normal");
 
-    setStatusType("normal");
+    processingRef.current = false;
+
   }
 
+
+  // ----------------------------------------------------------
+  // UI
+  // ----------------------------------------------------------
+
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8">
-      <div className="mx-auto max-w-xl rounded-3xl bg-white p-5 shadow-xl sm:p-7">
 
-        <h1 className="text-center text-3xl font-bold text-slate-900">
-          Dispatch Scanner
-        </h1>
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#f5f7fa",
+        padding: "24px",
+        fontFamily:
+          "Arial, Helvetica, sans-serif"
+      }}
+    >
 
-        <p className="mt-2 text-center text-slate-500">
-          Scan once, then enter the number of cases being
-          dispatched.
-        </p>
+      <div
+        style={{
+          maxWidth: "650px",
+          margin: "0 auto"
+        }}
+      >
 
-        <div className="mt-6 overflow-hidden rounded-3xl bg-black">
-          <div className="relative h-[300px] w-full">
+        <div
+          style={{
+            background: "#111827",
+            color: "white",
+            borderRadius: "16px",
+            padding: "22px",
+            marginBottom: "18px"
+          }}
+        >
 
-            <video
-              ref={videoRef}
-              className="h-full w-full object-cover"
-              autoPlay
-              muted
-              playsInline
-            />
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "28px"
+            }}
+          >
+            Dispatch
+          </h1>
 
-            {cameraRunning && (
-              <div className="pointer-events-none absolute left-[8%] right-[8%] top-1/2 h-[105px] -translate-y-1/2 rounded-2xl border-4 border-green-400" />
-            )}
+          <p
+            style={{
+              margin:
+                "7px 0 0",
+              opacity: 0.8
+            }}
+          >
+            Scan a product, enter the number
+            of cases, then confirm.
+          </p>
 
-          </div>
         </div>
 
-        <p className="mt-3 text-center text-sm text-slate-500">
-          Keep the barcode horizontal and inside the green box.
-        </p>
 
-        {!cameraRunning && !barcode && (
-          <button
-            type="button"
-            onClick={startScanner}
-            className="mt-5 w-full rounded-2xl bg-slate-900 px-5 py-5 text-xl font-bold text-white"
+        {/* CAMERA */}
+
+        {!barcode && (
+
+          <section
+            style={{
+              background: "white",
+              borderRadius: "16px",
+              padding: "18px",
+              boxShadow:
+                "0 2px 10px rgba(0,0,0,0.08)",
+              marginBottom: "18px"
+            }}
           >
-            Start Camera
-          </button>
-        )}
 
-        {cameraRunning && (
-          <button
-            type="button"
-            onClick={stopScanner}
-            className="mt-5 w-full rounded-2xl bg-slate-900 px-5 py-5 text-xl font-bold text-white"
-          >
-            Stop Camera
-          </button>
-        )}
+            <div
+              style={{
+                position: "relative",
+                overflow: "hidden",
+                borderRadius: "12px",
+                background: "#000"
+              }}
+            >
 
-        {barcode && product && (
-          <div className="mt-5 rounded-2xl border border-green-200 bg-green-50 p-5">
-
-            <p className="text-center text-sm font-medium uppercase tracking-wide text-green-700">
-              Product Scanned
-            </p>
-
-            <p className="mt-2 text-center text-2xl font-bold text-green-900">
-              {product}
-            </p>
-
-            <p className="mt-1 text-center text-sm text-green-700">
-              Barcode: {barcode}
-            </p>
-
-            {stock !== null && (
-              <p className="mt-3 text-center text-sm text-green-700">
-                Current stock:{" "}
-                <strong>{stock} cases</strong>
-              </p>
-            )}
-
-            <label className="mt-5 block text-sm font-semibold text-slate-800">
-              Number of cases to dispatch
-
-              <input
-                type="number"
-                min="1"
-                step="1"
-                inputMode="numeric"
-                value={quantity}
-                onChange={(e) =>
-                  setQuantity(e.target.value)
-                }
-                placeholder="e.g. 48"
-                className="mt-2 w-full rounded-2xl border-2 border-slate-200 bg-white px-5 py-4 text-center text-3xl font-bold text-slate-900 outline-none focus:border-slate-900"
+              <video
+                ref={videoRef}
+                muted
+                playsInline
+                style={{
+                  display: "block",
+                  width: "100%",
+                  height: "300px",
+                  objectFit: "cover"
+                }}
               />
-            </label>
+
+              {cameraRunning && (
+
+                <div
+                  style={{
+                    position: "absolute",
+                    left: "12%",
+                    right: "12%",
+                    top: "38%",
+                    height: "24%",
+                    border:
+                      "3px solid #22c55e",
+                    borderRadius: "8px",
+                    pointerEvents: "none"
+                  }}
+                />
+
+              )}
+
+            </div>
+
 
             <button
               type="button"
-              onClick={confirmDispatch}
-              disabled={!quantity}
-              className="mt-4 w-full rounded-2xl bg-slate-900 px-5 py-5 text-xl font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={startScanner}
+              disabled={cameraRunning}
+              style={{
+                width: "100%",
+                marginTop: "14px",
+                padding: "15px",
+                border: "none",
+                borderRadius: "10px",
+                background:
+                  cameraRunning
+                    ? "#9ca3af"
+                    : "#111827",
+                color: "white",
+                fontSize: "17px",
+                fontWeight: 700,
+                cursor:
+                  cameraRunning
+                    ? "default"
+                    : "pointer"
+              }}
             >
-              Confirm Dispatch
+              {cameraRunning
+                ? "Scanning..."
+                : "Start Camera"}
             </button>
 
-          </div>
+          </section>
+
         )}
 
-        <div
-          className={`mt-5 rounded-2xl p-6 text-center ${
-            statusType === "success"
-              ? "bg-green-50 text-green-800"
-              : statusType === "error"
-              ? "bg-red-50 text-red-800"
-              : "bg-slate-50 text-slate-900"
-          }`}
-        >
-          <p className="text-sm font-medium opacity-60">
-            Status
-          </p>
 
-          <p className="mt-2 text-xl font-semibold">
-            {status}
-          </p>
-        </div>
+        {/* PRODUCT / QUANTITY */}
 
-        {statusType === "success" && (
-          <button
-            type="button"
-            onClick={resetForNextDispatch}
-            className="mt-5 w-full rounded-2xl border-2 border-slate-900 bg-white px-5 py-4 text-lg font-bold text-slate-900"
+        {barcode && (
+
+          <section
+            style={{
+              background: "white",
+              borderRadius: "16px",
+              padding: "20px",
+              boxShadow:
+                "0 2px 10px rgba(0,0,0,0.08)"
+            }}
           >
-            Dispatch Another Product
-          </button>
+
+            {loadingProduct ? (
+
+              <div
+                style={{
+                  padding: "20px 0",
+                  textAlign: "center",
+                  fontSize: "18px"
+                }}
+              >
+                Loading product...
+              </div>
+
+            ) : (
+
+              <>
+
+                <div
+                  style={{
+                    marginBottom: "18px"
+                  }}
+                >
+
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      color: "#6b7280",
+                      marginBottom: "5px"
+                    }}
+                  >
+                    PRODUCT
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: "24px",
+                      fontWeight: 800,
+                      color: "#111827"
+                    }}
+                  >
+                    {product}
+                  </div>
+
+                </div>
+
+
+                <div
+                  style={{
+                    background: "#f3f4f6",
+                    borderRadius: "10px",
+                    padding: "13px",
+                    marginBottom: "18px"
+                  }}
+                >
+
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      color: "#6b7280"
+                    }}
+                  >
+                    CURRENT STOCK
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: "25px",
+                      fontWeight: 800,
+                      marginTop: "3px",
+                      color: "#111827"
+                    }}
+                  >
+                    {stock ?? "..."} cases
+                  </div>
+
+                </div>
+
+
+                <label
+                  htmlFor="quantity"
+                  style={{
+                    display: "block",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    color: "#111827",
+                    marginBottom: "7px"
+                  }}
+                >
+                  Number of cases to dispatch
+                </label>
+
+
+                <input
+                  ref={quantityRef}
+                  id="quantity"
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  step="1"
+                  value={quantity}
+                  onChange={(e) =>
+                    setQuantity(e.target.value)
+                  }
+                  onKeyDown={(e) => {
+
+                    if (
+                      e.key === "Enter" &&
+                      !dispatching
+                    ) {
+
+                      confirmDispatch();
+
+                    }
+
+                  }}
+                  placeholder="e.g. 48"
+                  disabled={dispatching}
+                  autoComplete="off"
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    padding: "17px",
+                    border:
+                      "2px solid #d1d5db",
+                    borderRadius: "10px",
+                    fontSize: "22px",
+                    color: "#111827",
+                    outline: "none",
+                    marginBottom: "12px"
+                  }}
+                />
+
+
+                <button
+                  type="button"
+                  onClick={confirmDispatch}
+                  disabled={
+                    !quantity ||
+                    dispatching
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "16px",
+                    border: "none",
+                    borderRadius: "10px",
+                    background:
+                      !quantity ||
+                      dispatching
+                        ? "#9ca3af"
+                        : "#16a34a",
+                    color: "white",
+                    fontSize: "18px",
+                    fontWeight: 800,
+                    cursor:
+                      !quantity ||
+                      dispatching
+                        ? "default"
+                        : "pointer"
+                  }}
+                >
+                  {dispatching
+                    ? "Processing..."
+                    : "Confirm Dispatch"}
+                </button>
+
+
+                <button
+                  type="button"
+                  onClick={dispatchAnother}
+                  disabled={dispatching}
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    marginTop: "10px",
+                    border:
+                      "1px solid #d1d5db",
+                    borderRadius: "10px",
+                    background: "white",
+                    color: "#111827",
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    cursor:
+                      dispatching
+                        ? "default"
+                        : "pointer"
+                  }}
+                >
+                  Dispatch Another Product
+                </button>
+
+              </>
+
+            )}
+
+          </section>
+
         )}
 
-        <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-5 text-center text-orange-800">
-          <p className="font-bold">
-            DISPATCH MODE
-          </p>
 
-          <p className="mt-1 text-sm">
-            Scan once and enter the number of cases being
-            dispatched.
-          </p>
-        </div>
+        {/* STATUS */}
+
+        {message && (
+
+          <div
+            style={{
+              marginTop: "16px",
+              padding: "15px",
+              borderRadius: "10px",
+              background:
+                messageType === "success"
+                  ? "#dcfce7"
+                  : messageType === "error"
+                  ? "#fee2e2"
+                  : "#e5e7eb",
+              color:
+                messageType === "success"
+                  ? "#166534"
+                  : messageType === "error"
+                  ? "#991b1b"
+                  : "#111827",
+              fontWeight: 700,
+              textAlign: "center"
+            }}
+          >
+            {message}
+          </div>
+
+        )}
 
       </div>
+
     </main>
+
   );
+
 }
