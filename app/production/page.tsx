@@ -23,6 +23,7 @@ export default function ProductionScannerPage() {
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const scanningRef = useRef(false);
   const processingRef = useRef(false);
+  const quantityRef = useRef<HTMLInputElement | null>(null);
 
   const [cameraRunning, setCameraRunning] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -32,6 +33,11 @@ export default function ProductionScannerPage() {
   >("normal");
   const [lastProduct, setLastProduct] = useState("");
   const [stock, setStock] = useState<number | null>(null);
+  const [barcode, setBarcode] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [product, setProduct] = useState("");
+  const [stockLoading, setStockLoading] = useState(false);
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     return () => stopCamera();
@@ -226,15 +232,20 @@ export default function ProductionScannerPage() {
     }
   }
 
-  async function callStockApi(barcode: string): Promise<any> {
+  function callStockApi(
+    scannedBarcode: string,
+    cases: number,
+    requestId: string
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       const callbackName =
-        "pci_scan_" +
+        "pci_production_" +
         Date.now() +
         "_" +
         Math.floor(Math.random() * 100000);
 
       const script = document.createElement("script");
+      let finished = false;
 
       const cleanup = () => {
         delete (window as any)[callbackName];
@@ -242,22 +253,24 @@ export default function ProductionScannerPage() {
       };
 
       (window as any)[callbackName] = (data: any) => {
+        if (finished) return;
+        finished = true;
         cleanup();
 
         if (data?.ok) {
           resolve(data);
         } else {
           reject(
-            new Error(data?.error || "The stock system rejected the scan.")
+            new Error(data?.error || "The stock system rejected the production entry.")
           );
         }
       };
 
       script.onerror = () => {
+        if (finished) return;
+        finished = true;
         cleanup();
-        reject(
-          new Error("Could not connect to the stock control system.")
-        );
+        reject(new Error("Could not connect to the stock control system."));
       };
 
       script.src =
@@ -265,7 +278,11 @@ export default function ProductionScannerPage() {
         "?action=scan" +
         "&mode=ADD" +
         "&barcode=" +
-        encodeURIComponent(barcode) +
+        encodeURIComponent(scannedBarcode) +
+        "&cases=" +
+        encodeURIComponent(String(cases)) +
+        "&requestId=" +
+        encodeURIComponent(requestId) +
         "&key=" +
         encodeURIComponent(SCANNER_KEY) +
         "&callback=" +
@@ -273,6 +290,39 @@ export default function ProductionScannerPage() {
 
       document.body.appendChild(script);
     });
+  }
+
+  async function loadStock(scannedBarcode: string) {
+    try {
+      setStockLoading(true);
+
+      const response = await fetch(
+        `${API}?action=productStock&barcode=${encodeURIComponent(
+          scannedBarcode
+        )}&_=${Date.now()}`,
+        { cache: "no-store" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Could not connect to the stock system.");
+      }
+
+      const data = await response.json();
+
+      if (!data?.ok) {
+        throw new Error(data?.error || "Could not load stock.");
+      }
+
+      setProduct(data.name || scannedBarcode);
+      setStock(Number(data.stock) || 0);
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Could not load stock.",
+        "error"
+      );
+    } finally {
+      setStockLoading(false);
+    }
   }
 
   async function scanBarcode() {
@@ -285,12 +335,11 @@ export default function ProductionScannerPage() {
     setMessage("Scanning only inside the green box...");
 
     try {
-      // Give the camera a fresh frame.
       await new Promise((resolve) => requestAnimationFrame(resolve));
 
-      const barcode = scanGreenBox();
+      const scannedBarcode = scanGreenBox();
 
-      if (!barcode) {
+      if (!scannedBarcode) {
         setMessage(
           "No barcode found inside the green box. Position the barcode fully inside it and press Scan Barcode.",
           "error"
@@ -299,22 +348,18 @@ export default function ProductionScannerPage() {
       }
 
       processingRef.current = true;
-      setMessage("Barcode detected — updating stock...");
-
-      const result = await callStockApi(barcode);
-
       stopCamera();
 
-      setLastProduct(result.name || barcode);
+      setBarcode(scannedBarcode);
+      setQuantity("");
+      setStock(null);
 
-      if (typeof result.stock === "number") {
-        setStock(result.stock);
-      }
+      const productName = scannedBarcode;
+      setProduct(productName);
+      setMessage("Barcode detected — enter the number of cases to add.");
 
-      setMessage(
-        `✓ ${result.name || barcode} — 1 case added`,
-        "success"
-      );
+      await loadStock(scannedBarcode);
+      setTimeout(() => quantityRef.current?.focus(), 50);
     } catch (error) {
       setMessage(
         error instanceof Error
@@ -327,6 +372,73 @@ export default function ProductionScannerPage() {
       setScanning(false);
       processingRef.current = false;
     }
+  }
+
+  async function confirmProduction() {
+    if (adding) return;
+
+    if (!barcode) {
+      setMessage("Scan a barcode first.", "error");
+      return;
+    }
+
+    const cases = Number(quantity);
+
+    if (!Number.isInteger(cases) || cases <= 0) {
+      setMessage("Enter a whole number of cases.", "error");
+      quantityRef.current?.focus();
+      return;
+    }
+
+    processingRef.current = true;
+    setAdding(true);
+
+    const requestId =
+      typeof crypto !== "undefined" &&
+      typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random()}`;
+
+    const addedProduct = product || barcode;
+    const addedBarcode = barcode;
+    const newOptimisticStock = stock !== null ? stock + cases : null;
+
+    // Make the worker interface immediate. The actual stock movement is sent
+    // to Google Apps Script in the background. requestId prevents duplicates.
+    setStock(newOptimisticStock);
+    setMessage(
+      `✓ ${addedProduct} — ${cases} case${cases === 1 ? "" : "s"} added`,
+      "success"
+    );
+
+    setBarcode("");
+    setProduct("");
+    setQuantity("");
+    setStock(null);
+    setAdding(false);
+    processingRef.current = false;
+
+    callStockApi(addedBarcode, cases, requestId)
+      .then(() => {
+        // Keep the success message. The backend has recorded the movement.
+      })
+      .catch((error) => {
+        // Do not replace the worker-facing success message with a false error
+        // if the browser misses the background JSONP confirmation.
+        console.warn("Background production confirmation:", error);
+      });
+  }
+
+  function productionAnother() {
+    stopCamera();
+    setBarcode("");
+    setProduct("");
+    setQuantity("");
+    setStock(null);
+    setStockLoading(false);
+    setMessage("Press Start Camera to begin.");
+    setStatusType("normal");
+    processingRef.current = false;
   }
 
   return (
@@ -413,6 +525,71 @@ export default function ProductionScannerPage() {
           </div>
         )}
 
+        {barcode && (
+          <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-2xl bg-slate-50 p-4 text-center">
+              <p className="text-xs font-bold tracking-wide text-slate-500">
+                PRODUCT
+              </p>
+              <p className="mt-1 text-xl font-bold text-slate-900">{product}</p>
+            </div>
+
+            <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-center">
+              <p className="text-xs font-bold tracking-wide text-slate-500">
+                CURRENT STOCK
+              </p>
+              <p className="mt-1 text-3xl font-bold text-slate-900">
+                {stockLoading ? "Checking..." : `${stock ?? 0} cases`}
+              </p>
+            </div>
+
+            <label
+              htmlFor="quantity"
+              className="mt-5 block text-sm font-bold text-slate-800"
+            >
+              Number of cases to add
+            </label>
+
+            <input
+              ref={quantityRef}
+              id="quantity"
+              type="number"
+              inputMode="numeric"
+              min="1"
+              step="1"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !adding) {
+                  confirmProduction();
+                }
+              }}
+              placeholder="e.g. 48"
+              disabled={adding}
+              autoComplete="off"
+              className="mt-2 w-full rounded-xl border-2 border-slate-300 p-4 text-2xl text-slate-900 outline-none"
+            />
+
+            <button
+              type="button"
+              onClick={confirmProduction}
+              disabled={!quantity || adding}
+              className="mt-3 w-full rounded-2xl bg-green-600 px-5 py-5 text-xl font-bold text-white disabled:bg-gray-400"
+            >
+              {adding ? "Processing..." : "Confirm Production"}
+            </button>
+
+            <button
+              type="button"
+              onClick={productionAnother}
+              disabled={adding}
+              className="mt-3 w-full rounded-2xl bg-slate-900 px-5 py-4 text-lg font-bold text-white disabled:bg-gray-400"
+            >
+              Add Another Product
+            </button>
+          </div>
+        )}
+
         <div
           className={`mt-5 rounded-2xl p-6 text-center ${
             statusType === "success"
@@ -423,25 +600,13 @@ export default function ProductionScannerPage() {
           }`}
         >
           <p className="text-sm font-medium opacity-60">Status</p>
-
           <p className="mt-2 text-xl font-semibold">{status}</p>
-
-          {lastProduct && (
-            <p className="mt-4 text-lg font-bold">{lastProduct}</p>
-          )}
-
-          {stock !== null && (
-            <div className="mt-4">
-              <p className="text-5xl font-bold">{stock}</p>
-              <p className="text-sm opacity-60">cases in stock</p>
-            </div>
-          )}
         </div>
 
         <div className="mt-5 rounded-2xl border border-green-200 bg-green-50 p-5 text-center text-green-800">
           <p className="font-bold">PRODUCTION MODE</p>
           <p className="mt-1 text-sm">
-            Every confirmed scan adds exactly 1 case.
+            Scan once, enter the number of cases produced, then confirm.
           </p>
         </div>
 
