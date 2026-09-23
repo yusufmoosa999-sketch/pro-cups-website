@@ -9,20 +9,24 @@ const API =
 
 const SCANNER_KEY = "it788PCVVUNewTCbyeVF3Rgk";
 
+const ROI = {
+  left: 0.08,
+  top: 0.38,
+  width: 0.84,
+  height: 0.24,
+};
+
 export default function ProductionScannerPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const readerRef = useRef<BrowserMultiFormatReader | null>(null);
-  const processingRef = useRef(false);
-
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const scanningRef = useRef(false);
+  const processingRef = useRef(false);
 
   const [cameraRunning, setCameraRunning] = useState(false);
-  const [status, setStatus] = useState(
-    "Press Start Camera to begin."
-  );
+  const [scanning, setScanning] = useState(false);
+  const [status, setStatus] = useState("Press Start Camera to begin.");
   const [statusType, setStatusType] = useState<
     "normal" | "success" | "error"
   >("normal");
@@ -30,13 +34,7 @@ export default function ProductionScannerPage() {
   const [stock, setStock] = useState<number | null>(null);
 
   useEffect(() => {
-    return () => {
-      stopScanner();
-
-      if (scanTimerRef.current) {
-        clearTimeout(scanTimerRef.current);
-      }
-    };
+    return () => stopCamera();
   }, []);
 
   function setMessage(
@@ -47,31 +45,188 @@ export default function ProductionScannerPage() {
     setStatusType(type);
   }
 
-  function stopScanner() {
+  function stopCamera() {
     scanningRef.current = false;
+    setScanning(false);
 
-    if (scanTimerRef.current) {
-      clearTimeout(scanTimerRef.current);
-      scanTimerRef.current = null;
-    }
-
-    streamRef.current?.getTracks().forEach((track) => {
-      track.stop();
-    });
-
+    streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
-
-    readerRef.current = null;
 
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.srcObject = null;
     }
 
+    readerRef.current = null;
     setCameraRunning(false);
   }
 
-  function callStockApi(barcode: string): Promise<any> {
+  async function startCamera() {
+    if (!videoRef.current) {
+      setMessage("Camera element is not ready.", "error");
+      return;
+    }
+
+    stopCamera();
+    processingRef.current = false;
+
+    try {
+      setMessage("Starting camera...");
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          aspectRatio: { ideal: 16 / 9 },
+        },
+      });
+
+      streamRef.current = stream;
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play();
+
+      setCameraRunning(true);
+      setMessage(
+        "Camera ready — place the barcode completely inside the green box."
+      );
+    } catch (error) {
+      setCameraRunning(false);
+      setMessage(
+        error instanceof Error
+          ? `Camera error: ${error.message}`
+          : "Could not start the camera.",
+        "error"
+      );
+    }
+  }
+
+  function getVisibleVideoCrop() {
+    const video = videoRef.current;
+
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      return null;
+    }
+
+    const displayWidth = video.clientWidth;
+    const displayHeight = video.clientHeight;
+
+    if (!displayWidth || !displayHeight) {
+      return null;
+    }
+
+    // The video is displayed with object-fit: cover.
+    // Work out exactly which source pixels are visible on screen.
+    const sourceWidth = video.videoWidth;
+    const sourceHeight = video.videoHeight;
+
+    const scale = Math.max(
+      displayWidth / sourceWidth,
+      displayHeight / sourceHeight
+    );
+
+    const renderedWidth = sourceWidth * scale;
+    const renderedHeight = sourceHeight * scale;
+
+    const offsetX = (displayWidth - renderedWidth) / 2;
+    const offsetY = (displayHeight - renderedHeight) / 2;
+
+    const greenLeft = displayWidth * ROI.left;
+    const greenTop = displayHeight * ROI.top;
+    const greenWidth = displayWidth * ROI.width;
+    const greenHeight = displayHeight * ROI.height;
+
+    const sourceLeft = Math.max(0, (greenLeft - offsetX) / scale);
+    const sourceTop = Math.max(0, (greenTop - offsetY) / scale);
+
+    const sourceRight = Math.min(
+      sourceWidth,
+      (greenLeft + greenWidth - offsetX) / scale
+    );
+
+    const sourceBottom = Math.min(
+      sourceHeight,
+      (greenTop + greenHeight - offsetY) / scale
+    );
+
+    const width = sourceRight - sourceLeft;
+    const height = sourceBottom - sourceTop;
+
+    if (width <= 0 || height <= 0) {
+      return null;
+    }
+
+    return {
+      left: sourceLeft,
+      top: sourceTop,
+      width,
+      height,
+    };
+  }
+
+  function scanGreenBox(): string | null {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (!video || !canvas) {
+      setMessage("Camera is not ready.", "error");
+      return null;
+    }
+
+    if (video.readyState < 2 || !video.videoWidth || !video.videoHeight) {
+      setMessage("Camera is still starting. Try again in a moment.", "error");
+      return null;
+    }
+
+    const crop = getVisibleVideoCrop();
+
+    if (!crop) {
+      setMessage("Could not determine the green scan area.", "error");
+      return null;
+    }
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+    if (!ctx) {
+      setMessage("Could not prepare the scanner.", "error");
+      return null;
+    }
+
+    const outputWidth = Math.max(1, Math.round(crop.width));
+    const outputHeight = Math.max(1, Math.round(crop.height));
+
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
+
+    ctx.drawImage(
+      video,
+      crop.left,
+      crop.top,
+      crop.width,
+      crop.height,
+      0,
+      0,
+      outputWidth,
+      outputHeight
+    );
+
+    const hints = new Map<DecodeHintType, any>();
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128]);
+    hints.set(DecodeHintType.TRY_HARDER, true);
+
+    const reader = new BrowserMultiFormatReader(hints);
+    readerRef.current = reader;
+
+    try {
+      const result = reader.decodeFromCanvas(canvas);
+      return result.getText().trim() || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function callStockApi(barcode: string): Promise<any> {
     return new Promise((resolve, reject) => {
       const callbackName =
         "pci_scan_" +
@@ -81,48 +236,31 @@ export default function ProductionScannerPage() {
 
       const script = document.createElement("script");
 
-      let finished = false;
-
       const cleanup = () => {
         delete (window as any)[callbackName];
         script.remove();
       };
 
       (window as any)[callbackName] = (data: any) => {
-        if (finished) {
-          return;
-        }
-
-        finished = true;
         cleanup();
 
         if (data?.ok) {
           resolve(data);
         } else {
           reject(
-            new Error(
-              data?.error || "The stock system rejected the scan."
-            )
+            new Error(data?.error || "The stock system rejected the scan.")
           );
         }
       };
 
       script.onerror = () => {
-        if (finished) {
-          return;
-        }
-
-        finished = true;
         cleanup();
-
         reject(
-          new Error(
-            "Could not connect to the stock control system."
-          )
+          new Error("Could not connect to the stock control system.")
         );
       };
 
-      const url =
+      script.src =
         API +
         "?action=scan" +
         "&mode=ADD" +
@@ -133,25 +271,39 @@ export default function ProductionScannerPage() {
         "&callback=" +
         encodeURIComponent(callbackName);
 
-      script.src = url;
-
       document.body.appendChild(script);
     });
   }
 
-  async function handleBarcode(barcode: string) {
-    if (processingRef.current) {
+  async function scanBarcode() {
+    if (!cameraRunning || scanningRef.current || processingRef.current) {
       return;
     }
 
-    processingRef.current = true;
-
-    setMessage("Barcode detected — updating stock...");
+    scanningRef.current = true;
+    setScanning(true);
+    setMessage("Scanning only inside the green box...");
 
     try {
+      // Give the camera a fresh frame.
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      const barcode = scanGreenBox();
+
+      if (!barcode) {
+        setMessage(
+          "No barcode found inside the green box. Position the barcode fully inside it and press Scan Barcode.",
+          "error"
+        );
+        return;
+      }
+
+      processingRef.current = true;
+      setMessage("Barcode detected — updating stock...");
+
       const result = await callStockApi(barcode);
 
-      stopScanner();
+      stopCamera();
 
       setLastProduct(result.name || barcode);
 
@@ -171,236 +323,28 @@ export default function ProductionScannerPage() {
         "error"
       );
     } finally {
-      processingRef.current = false;
-    }
-  }
-
-  async function scanFrame() {
-    if (
-      !scanningRef.current ||
-      processingRef.current
-    ) {
-      return;
-    }
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const reader = readerRef.current;
-
-    if (
-      !video ||
-      !canvas ||
-      !reader ||
-      video.readyState < 2 ||
-      video.videoWidth === 0 ||
-      video.videoHeight === 0
-    ) {
-      scanTimerRef.current = setTimeout(scanFrame, 70);
-      return;
-    }
-
-    /*
-     * The visible green box is:
-     *
-     * 8% from the left
-     * 8% from the right
-     * centred vertically
-     * 105px high in the displayed 300px camera window
-     *
-     * The camera frame is cropped to the same proportional area
-     * before it is passed to ZXing.
-     */
-
-    const cropX = Math.round(video.videoWidth * 0.08);
-    const cropWidth = Math.round(video.videoWidth * 0.84);
-
-    const displayedHeight = 300;
-    const boxHeightRatio = 105 / displayedHeight;
-
-    const cropHeight = Math.round(
-      video.videoHeight * boxHeightRatio
-    );
-
-    const cropY = Math.round(
-      (video.videoHeight - cropHeight) / 2
-    );
-
-    const targetWidth = 1280;
-    const targetHeight = Math.max(
-      160,
-      Math.round(
-        cropHeight * (targetWidth / cropWidth)
-      )
-    );
-
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-
-    const context = canvas.getContext("2d", {
-      willReadFrequently: true,
-    });
-
-    if (!context) {
-      scanTimerRef.current = setTimeout(scanFrame, 70);
-      return;
-    }
-
-    context.drawImage(
-      video,
-      cropX,
-      cropY,
-      cropWidth,
-      cropHeight,
-      0,
-      0,
-      targetWidth,
-      targetHeight
-    );
-
-    try {
-      const result = reader.decodeFromCanvas(canvas);
-
-      if (result) {
-        const scannedBarcode = result
-          .getText()
-          .trim();
-
-        if (scannedBarcode) {
-          scanningRef.current = false;
-          await handleBarcode(scannedBarcode);
-          return;
-        }
-      }
-    } catch {
-      // No barcode found in this frame.
-      // Continue scanning.
-    }
-
-    if (scanningRef.current) {
-      scanTimerRef.current = setTimeout(
-        scanFrame,
-        70
-      );
-    }
-  }
-
-  async function startScanner() {
-    if (!videoRef.current) {
-      setMessage(
-        "Camera element is not ready.",
-        "error"
-      );
-      return;
-    }
-
-    if (processingRef.current) {
-      return;
-    }
-
-    processingRef.current = false;
-
-    stopScanner();
-
-    setLastProduct("");
-    setStock(null);
-    setCameraRunning(false);
-
-    setMessage("Starting camera...");
-
-    const hints = new Map<DecodeHintType, any>();
-
-    hints.set(
-      DecodeHintType.POSSIBLE_FORMATS,
-      [BarcodeFormat.CODE_128]
-    );
-
-    hints.set(
-      DecodeHintType.TRY_HARDER,
-      true
-    );
-
-    const reader =
-      new BrowserMultiFormatReader(hints);
-
-    readerRef.current = reader;
-
-    try {
-      const stream =
-        await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: {
-            facingMode: {
-              ideal: "environment",
-            },
-            width: {
-              ideal: 1920,
-            },
-            height: {
-              ideal: 1080,
-            },
-          },
-        });
-
-      streamRef.current = stream;
-
-      const video = videoRef.current;
-
-      video.srcObject = stream;
-      video.setAttribute(
-        "playsinline",
-        "true"
-      );
-      video.muted = true;
-
-      await video.play();
-
-      scanningRef.current = true;
-      setCameraRunning(true);
-
-      setMessage(
-        "Camera ready — place the barcode inside the green box."
-      );
-
-      scanTimerRef.current = setTimeout(
-        scanFrame,
-        200
-      );
-    } catch (error) {
       scanningRef.current = false;
-      readerRef.current = null;
-
-      streamRef.current?.getTracks().forEach(
-        (track) => track.stop()
-      );
-
-      streamRef.current = null;
-
-      setCameraRunning(false);
-
-      setMessage(
-        error instanceof Error
-          ? `Camera error: ${error.message}`
-          : "Could not start the camera.",
-        "error"
-      );
+      setScanning(false);
+      processingRef.current = false;
     }
   }
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8">
       <div className="mx-auto max-w-xl rounded-3xl bg-white p-5 shadow-xl sm:p-7">
-
         <h1 className="text-center text-3xl font-bold text-slate-900">
           Production Scanner
         </h1>
 
         <p className="mt-2 text-center text-slate-500">
-          Scan a product barcode to add 1 case to stock.
+          Place the barcode inside the green box, then press Scan Barcode.
         </p>
 
         <div className="mt-6 overflow-hidden rounded-3xl bg-black">
-          <div className="relative h-[300px] w-full">
-
+          <div
+            className="relative w-full"
+            style={{ aspectRatio: "16 / 9" }}
+          >
             <video
               ref={videoRef}
               className="h-full w-full object-cover"
@@ -410,46 +354,63 @@ export default function ProductionScannerPage() {
             />
 
             {cameraRunning && (
-              <div
-                className="
-                  pointer-events-none
-                  absolute
-                  left-[8%]
-                  right-[8%]
-                  top-1/2
-                  h-[105px]
-                  -translate-y-1/2
-                  rounded-2xl
-                  border-4
-                  border-green-400
-                  shadow-[0_0_0_9999px_rgba(0,0,0,0.25)]
-                "
-              />
-            )}
+              <>
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,.42))",
+                    clipPath:
+                      "polygon(0 0,100% 0,100% 100%,0 100%,0 0,8% 0,8% 38%,92% 38%,92% 62%,8% 62%,8% 0)",
+                  }}
+                />
 
+                <div
+                  className="pointer-events-none absolute rounded-2xl border-4 border-green-500"
+                  style={{
+                    left: "8%",
+                    top: "38%",
+                    width: "84%",
+                    height: "24%",
+                  }}
+                />
+              </>
+            )}
           </div>
         </div>
 
-        <p className="mt-3 text-center text-sm font-medium text-slate-500">
-          Place the barcode completely inside the green box.
+        <p className="mt-3 text-center text-sm text-slate-500">
+          Only the area inside the green box is scanned.
         </p>
 
         {!cameraRunning ? (
           <button
             type="button"
-            onClick={startScanner}
+            onClick={startCamera}
             className="mt-5 w-full rounded-2xl bg-slate-900 px-5 py-5 text-xl font-bold text-white"
           >
             Start Camera
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={stopScanner}
-            className="mt-5 w-full rounded-2xl bg-slate-900 px-5 py-5 text-xl font-bold text-white"
-          >
-            Stop Camera
-          </button>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={scanBarcode}
+              disabled={scanning}
+              className="rounded-2xl bg-green-600 px-5 py-5 text-xl font-bold text-white disabled:bg-gray-400"
+            >
+              {scanning ? "Scanning..." : "Scan Barcode"}
+            </button>
+
+            <button
+              type="button"
+              onClick={stopCamera}
+              disabled={scanning}
+              className="rounded-2xl bg-slate-900 px-5 py-5 text-xl font-bold text-white disabled:bg-gray-400"
+            >
+              Stop Camera
+            </button>
+          </div>
         )}
 
         <div
@@ -461,49 +422,30 @@ export default function ProductionScannerPage() {
               : "bg-slate-50 text-slate-900"
           }`}
         >
-          <p className="text-sm font-medium opacity-60">
-            Status
-          </p>
+          <p className="text-sm font-medium opacity-60">Status</p>
 
-          <p className="mt-2 text-xl font-semibold">
-            {status}
-          </p>
+          <p className="mt-2 text-xl font-semibold">{status}</p>
 
           {lastProduct && (
-            <p className="mt-4 text-lg font-bold">
-              {lastProduct}
-            </p>
+            <p className="mt-4 text-lg font-bold">{lastProduct}</p>
           )}
 
           {stock !== null && (
             <div className="mt-4">
-              <p className="text-5xl font-bold">
-                {stock}
-              </p>
-
-              <p className="text-sm opacity-60">
-                cases in stock
-              </p>
+              <p className="text-5xl font-bold">{stock}</p>
+              <p className="text-sm opacity-60">cases in stock</p>
             </div>
           )}
         </div>
 
         <div className="mt-5 rounded-2xl border border-green-200 bg-green-50 p-5 text-center text-green-800">
-          <p className="font-bold">
-            PRODUCTION MODE
-          </p>
-
+          <p className="font-bold">PRODUCTION MODE</p>
           <p className="mt-1 text-sm">
             Every confirmed scan adds exactly 1 case.
           </p>
         </div>
 
-        {/* Hidden canvas used for the actual green-box scan area. */}
-        <canvas
-          ref={canvasRef}
-          className="hidden"
-        />
-
+        <canvas ref={canvasRef} className="hidden" />
       </div>
     </main>
   );
