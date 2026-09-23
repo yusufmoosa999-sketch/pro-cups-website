@@ -7,21 +7,36 @@ import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 const API =
   "https://script.google.com/macros/s/AKfycbxIMNQWwpxRVPY6U-pui0_CbfFRbg8fW6srEBQdVcTP7ExZDpMy491dnTBW1uYURZ1bVg/exec";
 
-const SCANNER_KEY = "it788PCVVUNewTCbyeVF3Rgk";
+const SCANNER_KEY =
+  "it788PCVVUNewTCbyeVF3Rgk";
 
 type ScannerControls = {
   stop: () => void;
 };
 
-type Product = {
-  barcode: string;
-  name: string;
-  stock: number;
-  opening: number;
+const PRODUCT_NAMES: Record<string, string> = {
+  PCI250SW: "250ml Single Wall",
+  PCI250BR: "250ml Black Ripple",
+  PCI250KR: "250ml Kraft Ripple",
+  PCI250CR: "250ml Coffee Ripple",
+  PCI250CH: "250ml Checkered Ripple",
+  PCI250KD: "250ml Kraft Double Wall",
+  PCI250WD: "250ml White Double Wall",
+
+  PCI350SW: "350ml Single Wall",
+  PCI350BR: "350ml Black Ripple",
+  PCI350KR: "350ml Kraft Ripple",
+  PCI350CR: "350ml Coffee Ripple",
+  PCI350CH: "350ml Checkered Ripple",
+  PCI350KD: "350ml Kraft Double Wall",
+  PCI350WD: "350ml White Double Wall"
 };
 
+
 export default function DispatchPage() {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const videoRef =
+    useRef<HTMLVideoElement | null>(null);
 
   const controlsRef =
     useRef<ScannerControls | null>(null);
@@ -61,41 +76,76 @@ export default function DispatchPage() {
     useState("");
 
   const [messageType, setMessageType] =
-    useState<"normal" | "success" | "error">(
-      "normal"
-    );
+    useState<
+      "normal" |
+      "success" |
+      "error"
+    >("normal");
 
 
   // ==========================================================
-  // AUTOMATICALLY FOCUS QUANTITY BOX
+  // AUTOMATICALLY FOCUS QUANTITY
   // ==========================================================
 
   useEffect(() => {
-    if (barcode && product && !dispatching) {
+
+    if (
+      barcode &&
+      product &&
+      !dispatching
+    ) {
+
       requestAnimationFrame(() => {
+
         quantityRef.current?.focus();
+
       });
+
     }
-  }, [barcode, product, dispatching]);
+
+  }, [
+    barcode,
+    product,
+    dispatching
+  ]);
 
 
   // ==========================================================
-  // CLEAN UP CAMERA
+  // CLEAN UP
   // ==========================================================
 
   useEffect(() => {
+
     return () => {
-      stopScanner();
+
+      try {
+
+        controlsRef.current?.stop();
+
+      } catch {
+        // Ignore cleanup errors.
+      }
+
     };
+
   }, []);
 
 
+  // ==========================================================
+  // STATUS
+  // ==========================================================
+
   function setStatus(
     text: string,
-    type: "normal" | "success" | "error" = "normal"
+    type:
+      | "normal"
+      | "success"
+      | "error" = "normal"
   ) {
+
     setMessage(text);
     setMessageType(type);
+
   }
 
 
@@ -104,90 +154,98 @@ export default function DispatchPage() {
   // ==========================================================
 
   function stopScanner() {
+
     try {
+
       controlsRef.current?.stop();
+
     } catch {
       // Ignore camera stop errors.
     }
 
-    controlsRef.current = null;
-    setCameraRunning(false);
+
+    controlsRef.current =
+      null;
+
+    setCameraRunning(
+      false
+    );
+
   }
 
 
   // ==========================================================
-  // LOAD PRODUCT / STOCK
+  // LOAD ONLY ONE PRODUCT'S STOCK
   // ==========================================================
 
-  async function loadProduct(
+  async function loadStock(
     scannedBarcode: string
   ) {
-    try {
-      setStockLoading(true);
 
-      const response = await fetch(
-        `${API}?action=products&_=${Date.now()}`,
-        {
-          cache: "no-store"
-        }
+    try {
+
+      setStockLoading(
+        true
       );
 
+
+      const response =
+        await fetch(
+          `${API}?action=productStock&barcode=${encodeURIComponent(
+            scannedBarcode
+          )}&_=${Date.now()}`,
+          {
+            cache: "no-store"
+          }
+        );
+
+
       if (!response.ok) {
+
         throw new Error(
           "Could not connect to the stock system."
         );
+
       }
 
-      const data = await response.json();
 
-      if (
-        !data?.ok ||
-        !Array.isArray(data.products)
-      ) {
+      const data =
+        await response.json();
+
+
+      if (!data?.ok) {
+
         throw new Error(
           data?.error ||
           "Could not load stock."
         );
+
       }
 
-      const found: Product | undefined =
-        data.products.find(
-          (p: Product) =>
-            p.barcode === scannedBarcode
-        );
 
-      if (!found) {
-        throw new Error(
-          "Barcode not recognised."
-        );
-      }
-
-      setProduct(found.name);
-      setStock(found.stock);
-
-      setStatus(
-        `Enter the number of cases for ${found.name}.`
+      setStock(
+        Number(data.stock) || 0
       );
 
-    } catch (error) {
 
-      setBarcode("");
-      setProduct("");
-      setQuantity("");
-      setStock(null);
+    } catch (error) {
 
       setStatus(
         error instanceof Error
           ? error.message
-          : "Could not load product.",
+          : "Could not load stock.",
         "error"
       );
 
+
     } finally {
 
-      setStockLoading(false);
+      setStockLoading(
+        false
+      );
 
     }
+
   }
 
 
@@ -195,38 +253,87 @@ export default function DispatchPage() {
   // BARCODE DETECTED
   // ==========================================================
 
-  async function handleBarcode(
+  function handleBarcode(
     scannedBarcode: string
   ) {
 
-    // This is the ONLY place where we lock processing.
-    if (processingRef.current) {
+    if (
+      processingRef.current
+    ) {
+
       return;
+
     }
 
-    processingRef.current = true;
 
-    setBarcode(scannedBarcode);
+    processingRef.current =
+      true;
 
-    // Stop the camera immediately.
+
+    // Stop camera immediately.
     stopScanner();
 
-    // Clear previous values.
-    setProduct("");
+
+    // Product is known from barcode,
+    // so display it immediately.
+    const productName =
+      PRODUCT_NAMES[
+        scannedBarcode
+      ];
+
+
+    if (!productName) {
+
+      processingRef.current =
+        false;
+
+      setBarcode("");
+      setProduct("");
+      setQuantity("");
+      setStock(null);
+
+
+      setStatus(
+        "Barcode not recognised.",
+        "error"
+      );
+
+
+      return;
+
+    }
+
+
+    // Show the dispatch screen immediately.
+    setBarcode(
+      scannedBarcode
+    );
+
+    setProduct(
+      productName
+    );
+
     setQuantity("");
     setStock(null);
 
+
     setStatus(
-      "Barcode detected."
+      `Enter the number of cases for ${productName}.`
     );
 
-    // Give React a moment to display the
-    // quantity section immediately.
-    //
-    // The product lookup happens underneath.
-    await loadProduct(scannedBarcode);
 
-    processingRef.current = false;
+    // Release the processing lock now.
+    // The camera is already stopped, and
+    // the dispatch screen is displayed.
+    processingRef.current =
+      false;
+
+
+    // Get stock in the background.
+    loadStock(
+      scannedBarcode
+    );
+
   }
 
 
@@ -236,81 +343,105 @@ export default function DispatchPage() {
 
   async function startScanner() {
 
-    if (processingRef.current) {
+    if (
+      processingRef.current
+    ) {
+
       return;
+
     }
+
 
     try {
 
       stopScanner();
 
+
       setStatus(
         "Starting camera..."
       );
 
-      const hints = new Map();
+
+      const hints =
+        new Map();
+
 
       hints.set(
         DecodeHintType.POSSIBLE_FORMATS,
-        [BarcodeFormat.CODE_128]
+        [
+          BarcodeFormat.CODE_128
+        ]
       );
+
 
       hints.set(
         DecodeHintType.TRY_HARDER,
         true
       );
 
+
       const reader =
         new BrowserMultiFormatReader(
           hints
         );
 
-      readerRef.current = reader;
 
-      setCameraRunning(true);
+      readerRef.current =
+        reader;
+
+
+      setCameraRunning(
+        true
+      );
+
 
       const controls =
         await reader.decodeFromConstraints(
           {
             video: {
               facingMode: {
-                ideal: "environment"
+                ideal:
+                  "environment"
               },
+
               width: {
                 ideal: 1920
               },
+
               height: {
                 ideal: 1080
               }
             }
           },
+
           videoRef.current!,
+
           (result) => {
 
             if (!result) {
               return;
             }
 
-            if (processingRef.current) {
+
+            if (
+              processingRef.current
+            ) {
+
               return;
+
             }
 
+
             const scannedBarcode =
-              result.getText().trim();
+              result
+                .getText()
+                .trim();
+
 
             if (!scannedBarcode) {
               return;
             }
 
-            /*
-             * IMPORTANT:
-             *
-             * Do NOT set processingRef.current = true here.
-             *
-             * handleBarcode() does that itself.
-             *
-             * This was the problem in the previous version.
-             */
 
             handleBarcode(
               scannedBarcode
@@ -319,12 +450,17 @@ export default function DispatchPage() {
           }
         );
 
+
       controlsRef.current =
         controls as ScannerControls;
 
+
     } catch (error) {
 
-      setCameraRunning(false);
+      setCameraRunning(
+        false
+      );
+
 
       setStatus(
         error instanceof Error
@@ -334,11 +470,12 @@ export default function DispatchPage() {
       );
 
     }
+
   }
 
 
   // ==========================================================
-  // SEND DISPATCH TO GOOGLE APPS SCRIPT
+  // DISPATCH REQUEST
   // ==========================================================
 
   function callStockApi(
@@ -348,7 +485,10 @@ export default function DispatchPage() {
   ): Promise<any> {
 
     return new Promise(
-      (resolve, reject) => {
+      (
+        resolve,
+        reject
+      ) => {
 
         const callbackName =
           "pci_dispatch_" +
@@ -358,37 +498,27 @@ export default function DispatchPage() {
             Math.random() * 100000
           );
 
+
         const script =
-          document.createElement("script");
-
-        let finished = false;
-
-        const cleanup = () => {
-
-          delete (
-            window as any
-          )[callbackName];
-
-          script.remove();
-
-        };
+          document.createElement(
+            "script"
+          );
 
 
-        const finishError = (
-          error: Error
-        ) => {
+        let finished =
+          false;
 
-          if (finished) {
-            return;
-          }
 
-          finished = true;
+        const cleanup =
+          () => {
 
-          cleanup();
+            delete (
+              window as any
+            )[callbackName];
 
-          reject(error);
+            script.remove();
 
-        };
+          };
 
 
         (
@@ -400,9 +530,13 @@ export default function DispatchPage() {
               return;
             }
 
-            finished = true;
+
+            finished =
+              true;
+
 
             cleanup();
+
 
             if (data?.ok) {
 
@@ -418,18 +552,32 @@ export default function DispatchPage() {
               );
 
             }
+
           };
 
 
-        script.onerror = () => {
+        script.onerror =
+          () => {
 
-          finishError(
-            new Error(
-              "Could not connect to the stock control system."
-            )
-          );
+            if (finished) {
+              return;
+            }
 
-        };
+
+            finished =
+              true;
+
+
+            cleanup();
+
+
+            reject(
+              new Error(
+                "Could not connect to the stock control system."
+              )
+            );
+
+          };
 
 
         const url =
@@ -458,7 +606,9 @@ export default function DispatchPage() {
           );
 
 
-        script.src = url;
+        script.src =
+          url;
+
 
         document.body.appendChild(
           script
@@ -466,6 +616,7 @@ export default function DispatchPage() {
 
       }
     );
+
   }
 
 
@@ -475,9 +626,14 @@ export default function DispatchPage() {
 
   async function confirmDispatch() {
 
-    if (dispatching) {
+    if (
+      dispatching
+    ) {
+
       return;
+
     }
+
 
     if (!barcode) {
 
@@ -487,11 +643,14 @@ export default function DispatchPage() {
       );
 
       return;
+
     }
 
 
     const cases =
-      Number(quantity);
+      Number(
+        quantity
+      );
 
 
     if (
@@ -504,34 +663,37 @@ export default function DispatchPage() {
         "error"
       );
 
+
       quantityRef.current?.focus();
 
+
       return;
+
     }
 
 
-    // Don't allow dispatch until stock has loaded.
-    if (stockLoading || stock === null) {
-
-      setStatus(
-        "Still checking stock. Please wait a moment.",
-        "error"
-      );
-
-      return;
-    }
-
-
-    if (cases > stock) {
+    // If the stock display has already loaded,
+    // do the quick local check.
+    //
+    // If it is still loading, we DON'T make
+    // the worker wait. The backend will
+    // perform the authoritative stock check.
+    if (
+      stock !== null &&
+      cases > stock
+    ) {
 
       setStatus(
         `Only ${stock} case(s) are currently available.`,
         "error"
       );
 
+
       quantityRef.current?.focus();
 
+
       return;
+
     }
 
 
@@ -539,19 +701,32 @@ export default function DispatchPage() {
     // LOCK IMMEDIATELY
     // ========================================================
 
-    processingRef.current = true;
-    setDispatching(true);
+    processingRef.current =
+      true;
 
-    setStatus(
-      `Dispatching ${cases} case${cases === 1 ? "" : "s"}...`
+    setDispatching(
+      true
     );
 
 
-    // One unique ID for this exact dispatch.
+    setStatus(
+      `Dispatching ${cases} case${
+        cases === 1
+          ? ""
+          : "s"
+      }...`
+    );
+
+
+    // Unique ID for this exact dispatch.
     const requestId =
-      typeof crypto !== "undefined" &&
-      typeof crypto.randomUUID === "function"
+      typeof crypto !==
+        "undefined" &&
+      typeof crypto.randomUUID ===
+        "function"
+
         ? crypto.randomUUID()
+
         : `${Date.now()}-${Math.random()}`;
 
 
@@ -565,15 +740,22 @@ export default function DispatchPage() {
         );
 
 
-      setStock(result.stock);
+      setStock(
+        result.stock
+      );
+
 
       setStatus(
-        `✓ ${result.name} — ${cases} case${cases === 1 ? "" : "s"} dispatched`,
+        `✓ ${result.name} — ${cases} case${
+          cases === 1
+            ? ""
+            : "s"
+        } dispatched`,
         "success"
       );
 
 
-      // Clear the completed dispatch.
+      // Clear completed dispatch.
       setBarcode("");
       setProduct("");
       setQuantity("");
@@ -589,12 +771,18 @@ export default function DispatchPage() {
         "error"
       );
 
+
     } finally {
 
-      setDispatching(false);
-      processingRef.current = false;
+      setDispatching(
+        false
+      );
+
+      processingRef.current =
+        false;
 
     }
+
   }
 
 
@@ -606,16 +794,23 @@ export default function DispatchPage() {
 
     stopScanner();
 
+
     setBarcode("");
     setProduct("");
     setQuantity("");
     setStock(null);
     setStockLoading(false);
 
-    setMessage("");
-    setMessageType("normal");
 
-    processingRef.current = false;
+    setMessage("");
+    setMessageType(
+      "normal"
+    );
+
+
+    processingRef.current =
+      false;
+
   }
 
 
@@ -627,9 +822,15 @@ export default function DispatchPage() {
 
     <main
       style={{
-        minHeight: "100vh",
-        background: "#f5f7fa",
-        padding: "24px",
+        minHeight:
+          "100vh",
+
+        background:
+          "#f5f7fa",
+
+        padding:
+          "24px",
+
         fontFamily:
           "Arial, Helvetica, sans-serif"
       }}
@@ -637,8 +838,11 @@ export default function DispatchPage() {
 
       <div
         style={{
-          maxWidth: "650px",
-          margin: "0 auto"
+          maxWidth:
+            "650px",
+
+          margin:
+            "0 auto"
         }}
       >
 
@@ -646,28 +850,43 @@ export default function DispatchPage() {
 
         <div
           style={{
-            background: "#111827",
-            color: "white",
-            borderRadius: "16px",
-            padding: "22px",
-            marginBottom: "18px"
+            background:
+              "#111827",
+
+            color:
+              "white",
+
+            borderRadius:
+              "16px",
+
+            padding:
+              "22px",
+
+            marginBottom:
+              "18px"
           }}
         >
 
           <h1
             style={{
-              margin: 0,
-              fontSize: "28px"
+              margin:
+                0,
+
+              fontSize:
+                "28px"
             }}
           >
             Dispatch
           </h1>
 
+
           <p
             style={{
               margin:
                 "7px 0 0",
-              opacity: 0.8
+
+              opacity:
+                0.8
             }}
           >
             Scan a product, enter the number
@@ -683,50 +902,93 @@ export default function DispatchPage() {
 
           <section
             style={{
-              background: "white",
-              borderRadius: "16px",
-              padding: "18px",
+              background:
+                "white",
+
+              borderRadius:
+                "16px",
+
+              padding:
+                "18px",
+
               boxShadow:
                 "0 2px 10px rgba(0,0,0,0.08)",
-              marginBottom: "18px"
+
+              marginBottom:
+                "18px"
             }}
           >
 
             <div
               style={{
-                position: "relative",
-                overflow: "hidden",
-                borderRadius: "12px",
-                background: "#000"
+                position:
+                  "relative",
+
+                overflow:
+                  "hidden",
+
+                borderRadius:
+                  "12px",
+
+                background:
+                  "#000"
               }}
             >
 
               <video
-                ref={videoRef}
+                ref={
+                  videoRef
+                }
+
                 muted
+
                 playsInline
+
                 autoPlay
+
                 style={{
-                  display: "block",
-                  width: "100%",
-                  height: "300px",
-                  objectFit: "cover"
+                  display:
+                    "block",
+
+                  width:
+                    "100%",
+
+                  height:
+                    "300px",
+
+                  objectFit:
+                    "cover"
                 }}
               />
+
 
               {cameraRunning && (
 
                 <div
                   style={{
-                    position: "absolute",
-                    left: "12%",
-                    right: "12%",
-                    top: "38%",
-                    height: "24%",
+                    position:
+                      "absolute",
+
+                    left:
+                      "12%",
+
+                    right:
+                      "12%",
+
+                    top:
+                      "38%",
+
+                    height:
+                      "24%",
+
                     border:
                       "3px solid #22c55e",
-                    borderRadius: "8px",
-                    pointerEvents: "none"
+
+                    borderRadius:
+                      "8px",
+
+                    pointerEvents:
+                      "none"
                   }}
                 />
 
@@ -737,21 +999,42 @@ export default function DispatchPage() {
 
             <button
               type="button"
-              onClick={startScanner}
-              disabled={cameraRunning}
+              onClick={
+                startScanner
+              }
+              disabled={
+                cameraRunning
+              }
+
               style={{
-                width: "100%",
-                marginTop: "14px",
-                padding: "15px",
-                border: "none",
-                borderRadius: "10px",
+                width:
+                  "100%",
+
+                marginTop:
+                  "14px",
+
+                padding:
+                  "15px",
+
+                border:
+                  "none",
+
+                borderRadius:
+                  "10px",
+
                 background:
                   cameraRunning
                     ? "#9ca3af"
                     : "#111827",
-                color: "white",
-                fontSize: "17px",
-                fontWeight: 700
+
+                color:
+                  "white",
+
+                fontSize:
+                  "17px",
+
+                fontWeight:
+                  700
               }}
             >
               {cameraRunning
@@ -764,15 +1047,21 @@ export default function DispatchPage() {
         )}
 
 
-        {/* AFTER BARCODE IS SCANNED */}
+        {/* DISPATCH DETAILS */}
 
         {barcode && (
 
           <section
             style={{
-              background: "white",
-              borderRadius: "16px",
-              padding: "20px",
+              background:
+                "white",
+
+              borderRadius:
+                "16px",
+
+              padding:
+                "20px",
+
               boxShadow:
                 "0 2px 10px rgba(0,0,0,0.08)"
             }}
@@ -782,29 +1071,40 @@ export default function DispatchPage() {
 
             <div
               style={{
-                marginBottom: "18px"
+                marginBottom:
+                  "18px"
               }}
             >
 
               <div
                 style={{
-                  fontSize: "13px",
-                  color: "#6b7280",
-                  marginBottom: "5px"
+                  fontSize:
+                    "13px",
+
+                  color:
+                    "#6b7280",
+
+                  marginBottom:
+                    "5px"
                 }}
               >
                 PRODUCT
               </div>
 
+
               <div
                 style={{
-                  fontSize: "24px",
-                  fontWeight: 800,
-                  color: "#111827"
+                  fontSize:
+                    "24px",
+
+                  fontWeight:
+                    800,
+
+                  color:
+                    "#111827"
                 }}
               >
-                {product ||
-                  "Loading product..."}
+                {product}
               </div>
 
             </div>
@@ -814,28 +1114,46 @@ export default function DispatchPage() {
 
             <div
               style={{
-                background: "#f3f4f6",
-                borderRadius: "10px",
-                padding: "13px",
-                marginBottom: "18px"
+                background:
+                  "#f3f4f6",
+
+                borderRadius:
+                  "10px",
+
+                padding:
+                  "13px",
+
+                marginBottom:
+                  "18px"
               }}
             >
 
               <div
                 style={{
-                  fontSize: "13px",
-                  color: "#6b7280"
+                  fontSize:
+                    "13px",
+
+                  color:
+                    "#6b7280"
                 }}
               >
                 CURRENT STOCK
               </div>
 
+
               <div
                 style={{
-                  fontSize: "25px",
-                  fontWeight: 800,
-                  marginTop: "3px",
-                  color: "#111827"
+                  fontSize:
+                    "25px",
+
+                  fontWeight:
+                    800,
+
+                  marginTop:
+                    "3px",
+
+                  color:
+                    "#111827"
                 }}
               >
                 {stockLoading
@@ -851,11 +1169,20 @@ export default function DispatchPage() {
             <label
               htmlFor="quantity"
               style={{
-                display: "block",
-                fontSize: "15px",
-                fontWeight: 700,
-                color: "#111827",
-                marginBottom: "7px"
+                display:
+                  "block",
+
+                fontSize:
+                  "15px",
+
+                fontWeight:
+                  700,
+
+                color:
+                  "#111827",
+
+                marginBottom:
+                  "7px"
               }}
             >
               Number of cases to dispatch
@@ -863,47 +1190,82 @@ export default function DispatchPage() {
 
 
             <input
-              ref={quantityRef}
-              id="quantity"
-              type="number"
-              inputMode="numeric"
-              min="1"
-              step="1"
-              value={quantity}
-              onChange={(e) =>
-                setQuantity(
-                  e.target.value
-                )
+              ref={
+                quantityRef
               }
-              onKeyDown={(e) => {
 
-                if (
-                  e.key === "Enter" &&
-                  !dispatching
-                ) {
+              id="quantity"
 
-                  confirmDispatch();
+              type="number"
+
+              inputMode="numeric"
+
+              min="1"
+
+              step="1"
+
+              value={
+                quantity
+              }
+
+              onChange={
+                e =>
+                  setQuantity(
+                    e.target.value
+                  )
+              }
+
+              onKeyDown={
+                e => {
+
+                  if (
+                    e.key ===
+                      "Enter" &&
+                    !dispatching
+                  ) {
+
+                    confirmDispatch();
+
+                  }
 
                 }
-
-              }}
-              placeholder="e.g. 48"
-              disabled={
-                dispatching ||
-                !product
               }
+
+              placeholder="e.g. 48"
+
+              disabled={
+                dispatching
+              }
+
               autoComplete="off"
+
               style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "17px",
+                width:
+                  "100%",
+
+                boxSizing:
+                  "border-box",
+
+                padding:
+                  "17px",
+
                 border:
                   "2px solid #d1d5db",
-                borderRadius: "10px",
-                fontSize: "22px",
-                color: "#111827",
-                outline: "none",
-                marginBottom: "12px"
+
+                borderRadius:
+                  "10px",
+
+                fontSize:
+                  "22px",
+
+                color:
+                  "#111827",
+
+                outline:
+                  "none",
+
+                marginBottom:
+                  "12px"
               }}
             />
 
@@ -912,28 +1274,42 @@ export default function DispatchPage() {
 
             <button
               type="button"
-              onClick={confirmDispatch}
+              onClick={
+                confirmDispatch
+              }
+
               disabled={
                 !quantity ||
-                !product ||
-                stockLoading ||
                 dispatching
               }
+
               style={{
-                width: "100%",
-                padding: "16px",
-                border: "none",
-                borderRadius: "10px",
+                width:
+                  "100%",
+
+                padding:
+                  "16px",
+
+                border:
+                  "none",
+
+                borderRadius:
+                  "10px",
+
                 background:
                   !quantity ||
-                  !product ||
-                  stockLoading ||
                   dispatching
                     ? "#9ca3af"
                     : "#16a34a",
-                color: "white",
-                fontSize: "18px",
-                fontWeight: 800
+
+                color:
+                  "white",
+
+                fontSize:
+                  "18px",
+
+                fontWeight:
+                  800
               }}
             >
               {dispatching
@@ -949,18 +1325,38 @@ export default function DispatchPage() {
               onClick={
                 dispatchAnother
               }
-              disabled={dispatching}
+
+              disabled={
+                dispatching
+              }
+
               style={{
-                width: "100%",
-                padding: "14px",
-                marginTop: "10px",
+                width:
+                  "100%",
+
+                padding:
+                  "14px",
+
+                marginTop:
+                  "10px",
+
                 border:
                   "1px solid #d1d5db",
-                borderRadius: "10px",
-                background: "white",
-                color: "#111827",
-                fontSize: "16px",
-                fontWeight: 700
+
+                borderRadius:
+                  "10px",
+
+                background:
+                  "white",
+
+                color:
+                  "#111827",
+
+                fontSize:
+                  "16px",
+
+                fontWeight:
+                  700
               }}
             >
               Dispatch Another Product
@@ -977,23 +1373,46 @@ export default function DispatchPage() {
 
           <div
             style={{
-              marginTop: "16px",
-              padding: "15px",
-              borderRadius: "10px",
+              marginTop:
+                "16px",
+
+              padding:
+                "15px",
+
+              borderRadius:
+                "10px",
+
               background:
-                messageType === "success"
+                messageType ===
+                "success"
+
                   ? "#dcfce7"
-                  : messageType === "error"
+
+                  : messageType ===
+                    "error"
+
                   ? "#fee2e2"
+
                   : "#e5e7eb",
+
               color:
-                messageType === "success"
+                messageType ===
+                "success"
+
                   ? "#166534"
-                  : messageType === "error"
+
+                  : messageType ===
+                    "error"
+
                   ? "#991b1b"
+
                   : "#111827",
-              fontWeight: 700,
-              textAlign: "center"
+
+              fontWeight:
+                700,
+
+              textAlign:
+                "center"
             }}
           >
             {message}
