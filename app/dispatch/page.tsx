@@ -28,9 +28,9 @@ const PRODUCT_NAMES: Record<string, string> = {
 
 const ROI = {
   left: 0.08,
-  top: 0.38,
+  top: 0.34,
   width: 0.84,
-  height: 0.24,
+  height: 0.32,
 };
 
 export default function DispatchPage() {
@@ -557,7 +557,7 @@ export default function DispatchPage() {
                       inset: 0,
                       background: "rgba(0,0,0,0.42)",
                       clipPath:
-                        "polygon(0 0,100% 0,100% 100%,0 100%,0 0,8% 0,8% 38%,92% 38%,92% 62%,8% 62%,8% 0)",
+                        "polygon(0 0,100% 0,100% 100%,0 100%,0 0,8% 0,8% 34%,92% 34%,92% 66%,8% 66%,8% 0)",
                       pointerEvents: "none",
                     }}
                   />
@@ -566,9 +566,9 @@ export default function DispatchPage() {
                     style={{
                       position: "absolute",
                       left: "8%",
-                      top: "38%",
+                      top: "34%",
                       width: "84%",
-                      height: "24%",
+                      height: "32%",
                       border: "3px solid #22c55e",
                       borderRadius: "8px",
                       pointerEvents: "none",
