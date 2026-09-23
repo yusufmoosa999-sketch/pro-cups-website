@@ -21,7 +21,6 @@ type Product = {
 };
 
 export default function DispatchPage() {
-
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const controlsRef =
@@ -52,6 +51,12 @@ export default function DispatchPage() {
   const [stock, setStock] =
     useState<number | null>(null);
 
+  const [stockLoading, setStockLoading] =
+    useState(false);
+
+  const [dispatching, setDispatching] =
+    useState(false);
+
   const [message, setMessage] =
     useState("");
 
@@ -60,44 +65,28 @@ export default function DispatchPage() {
       "normal"
     );
 
-  const [loadingProduct, setLoadingProduct] =
-    useState(false);
 
-  const [dispatching, setDispatching] =
-    useState(false);
-
-
-  // ----------------------------------------------------------
-  // AUTO-FOCUS QUANTITY FIELD
-  // ----------------------------------------------------------
+  // ==========================================================
+  // AUTOMATICALLY FOCUS QUANTITY BOX
+  // ==========================================================
 
   useEffect(() => {
-
     if (barcode && product && !dispatching) {
-
-      // Wait for React to render the input,
-      // then immediately put the cursor inside it.
       requestAnimationFrame(() => {
-
         quantityRef.current?.focus();
-
       });
-
     }
-
   }, [barcode, product, dispatching]);
 
 
-  // ----------------------------------------------------------
+  // ==========================================================
   // CLEAN UP CAMERA
-  // ----------------------------------------------------------
+  // ==========================================================
 
   useEffect(() => {
-
     return () => {
       stopScanner();
     };
-
   }, []);
 
 
@@ -105,110 +94,76 @@ export default function DispatchPage() {
     text: string,
     type: "normal" | "success" | "error" = "normal"
   ) {
-
     setMessage(text);
     setMessageType(type);
-
   }
 
 
+  // ==========================================================
+  // STOP CAMERA
+  // ==========================================================
+
   function stopScanner() {
-
     try {
-
       controlsRef.current?.stop();
-
-    } catch (err) {
+    } catch {
       // Ignore camera stop errors.
     }
 
     controlsRef.current = null;
-
     setCameraRunning(false);
-
   }
 
 
-  // ----------------------------------------------------------
-  // GET PRODUCTS
-  // ----------------------------------------------------------
+  // ==========================================================
+  // LOAD PRODUCT / STOCK
+  // ==========================================================
 
-  async function getProducts(): Promise<Product[]> {
-
-    const response = await fetch(
-      `${API}?action=products`,
-      {
-        cache: "no-store"
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        "Could not connect to the stock system."
-      );
-    }
-
-    const data = await response.json();
-
-    if (!data?.ok || !Array.isArray(data.products)) {
-
-      throw new Error(
-        data?.error ||
-        "Could not load stock."
-      );
-
-    }
-
-    return data.products;
-
-  }
-
-
-  // ----------------------------------------------------------
-  // HANDLE BARCODE
-  // ----------------------------------------------------------
-
-  async function handleBarcode(
+  async function loadProduct(
     scannedBarcode: string
   ) {
-
-    if (processingRef.current) {
-      return;
-    }
-
-    processingRef.current = true;
-
-    setBarcode(scannedBarcode);
-
-    stopScanner();
-
-    setLoadingProduct(true);
-
-    setStatus(
-      "Barcode detected..."
-    );
-
     try {
+      setStockLoading(true);
 
-      const products =
-        await getProducts();
+      const response = await fetch(
+        `${API}?action=products&_=${Date.now()}`,
+        {
+          cache: "no-store"
+        }
+      );
 
-      const found =
-        products.find(
-          p => p.barcode === scannedBarcode
+      if (!response.ok) {
+        throw new Error(
+          "Could not connect to the stock system."
+        );
+      }
+
+      const data = await response.json();
+
+      if (
+        !data?.ok ||
+        !Array.isArray(data.products)
+      ) {
+        throw new Error(
+          data?.error ||
+          "Could not load stock."
+        );
+      }
+
+      const found: Product | undefined =
+        data.products.find(
+          (p: Product) =>
+            p.barcode === scannedBarcode
         );
 
       if (!found) {
-
         throw new Error(
           "Barcode not recognised."
         );
-
       }
 
       setProduct(found.name);
       setStock(found.stock);
-      setQuantity("");
 
       setStatus(
         `Enter the number of cases for ${found.name}.`
@@ -218,6 +173,7 @@ export default function DispatchPage() {
 
       setBarcode("");
       setProduct("");
+      setQuantity("");
       setStock(null);
 
       setStatus(
@@ -229,18 +185,54 @@ export default function DispatchPage() {
 
     } finally {
 
-      setLoadingProduct(false);
-
-      processingRef.current = false;
+      setStockLoading(false);
 
     }
-
   }
 
 
-  // ----------------------------------------------------------
+  // ==========================================================
+  // BARCODE DETECTED
+  // ==========================================================
+
+  async function handleBarcode(
+    scannedBarcode: string
+  ) {
+
+    // This is the ONLY place where we lock processing.
+    if (processingRef.current) {
+      return;
+    }
+
+    processingRef.current = true;
+
+    setBarcode(scannedBarcode);
+
+    // Stop the camera immediately.
+    stopScanner();
+
+    // Clear previous values.
+    setProduct("");
+    setQuantity("");
+    setStock(null);
+
+    setStatus(
+      "Barcode detected."
+    );
+
+    // Give React a moment to display the
+    // quantity section immediately.
+    //
+    // The product lookup happens underneath.
+    await loadProduct(scannedBarcode);
+
+    processingRef.current = false;
+  }
+
+
+  // ==========================================================
   // START CAMERA
-  // ----------------------------------------------------------
+  // ==========================================================
 
   async function startScanner() {
 
@@ -303,20 +295,26 @@ export default function DispatchPage() {
               return;
             }
 
-            const value =
+            const scannedBarcode =
               result.getText().trim();
 
-            if (!value) {
+            if (!scannedBarcode) {
               return;
             }
 
-            // Immediately lock processing before
-            // doing anything else.
-            processingRef.current = true;
+            /*
+             * IMPORTANT:
+             *
+             * Do NOT set processingRef.current = true here.
+             *
+             * handleBarcode() does that itself.
+             *
+             * This was the problem in the previous version.
+             */
 
-            stopScanner();
-
-            handleBarcode(value);
+            handleBarcode(
+              scannedBarcode
+            );
 
           }
         );
@@ -336,13 +334,12 @@ export default function DispatchPage() {
       );
 
     }
-
   }
 
 
-  // ----------------------------------------------------------
-  // JSONP DISPATCH REQUEST
-  // ----------------------------------------------------------
+  // ==========================================================
+  // SEND DISPATCH TO GOOGLE APPS SCRIPT
+  // ==========================================================
 
   function callStockApi(
     scannedBarcode: string,
@@ -364,19 +361,46 @@ export default function DispatchPage() {
         const script =
           document.createElement("script");
 
+        let finished = false;
+
         const cleanup = () => {
 
-          delete (window as any)[
-            callbackName
-          ];
+          delete (
+            window as any
+          )[callbackName];
 
           script.remove();
 
         };
 
 
-        (window as any)[callbackName] =
+        const finishError = (
+          error: Error
+        ) => {
+
+          if (finished) {
+            return;
+          }
+
+          finished = true;
+
+          cleanup();
+
+          reject(error);
+
+        };
+
+
+        (
+          window as any
+        )[callbackName] =
           (data: any) => {
+
+            if (finished) {
+              return;
+            }
+
+            finished = true;
 
             cleanup();
 
@@ -394,15 +418,12 @@ export default function DispatchPage() {
               );
 
             }
-
           };
 
 
         script.onerror = () => {
 
-          cleanup();
-
-          reject(
+          finishError(
             new Error(
               "Could not connect to the stock control system."
             )
@@ -445,13 +466,12 @@ export default function DispatchPage() {
 
       }
     );
-
   }
 
 
-  // ----------------------------------------------------------
+  // ==========================================================
   // CONFIRM DISPATCH
-  // ----------------------------------------------------------
+  // ==========================================================
 
   async function confirmDispatch() {
 
@@ -467,7 +487,6 @@ export default function DispatchPage() {
       );
 
       return;
-
     }
 
 
@@ -488,14 +507,22 @@ export default function DispatchPage() {
       quantityRef.current?.focus();
 
       return;
-
     }
 
 
-    if (
-      stock !== null &&
-      cases > stock
-    ) {
+    // Don't allow dispatch until stock has loaded.
+    if (stockLoading || stock === null) {
+
+      setStatus(
+        "Still checking stock. Please wait a moment.",
+        "error"
+      );
+
+      return;
+    }
+
+
+    if (cases > stock) {
 
       setStatus(
         `Only ${stock} case(s) are currently available.`,
@@ -505,16 +532,14 @@ export default function DispatchPage() {
       quantityRef.current?.focus();
 
       return;
-
     }
 
 
-    // --------------------------------------------------------
+    // ========================================================
     // LOCK IMMEDIATELY
-    // --------------------------------------------------------
+    // ========================================================
 
     processingRef.current = true;
-
     setDispatching(true);
 
     setStatus(
@@ -522,9 +547,7 @@ export default function DispatchPage() {
     );
 
 
-    // Unique ID for THIS exact dispatch.
-    // If the same request reaches Google again,
-    // Google will recognise it and not deduct again.
+    // One unique ID for this exact dispatch.
     const requestId =
       typeof crypto !== "undefined" &&
       typeof crypto.randomUUID === "function"
@@ -550,7 +573,7 @@ export default function DispatchPage() {
       );
 
 
-      // Clear the current dispatch.
+      // Clear the completed dispatch.
       setBarcode("");
       setProduct("");
       setQuantity("");
@@ -569,17 +592,15 @@ export default function DispatchPage() {
     } finally {
 
       setDispatching(false);
-
       processingRef.current = false;
 
     }
-
   }
 
 
-  // ----------------------------------------------------------
-  // RESET
-  // ----------------------------------------------------------
+  // ==========================================================
+  // DISPATCH ANOTHER
+  // ==========================================================
 
   function dispatchAnother() {
 
@@ -589,18 +610,18 @@ export default function DispatchPage() {
     setProduct("");
     setQuantity("");
     setStock(null);
+    setStockLoading(false);
 
     setMessage("");
     setMessageType("normal");
 
     processingRef.current = false;
-
   }
 
 
-  // ----------------------------------------------------------
-  // UI
-  // ----------------------------------------------------------
+  // ==========================================================
+  // PAGE
+  // ==========================================================
 
   return (
 
@@ -620,6 +641,8 @@ export default function DispatchPage() {
           margin: "0 auto"
         }}
       >
+
+        {/* HEADER */}
 
         <div
           style={{
@@ -682,6 +705,7 @@ export default function DispatchPage() {
                 ref={videoRef}
                 muted
                 playsInline
+                autoPlay
                 style={{
                   display: "block",
                   width: "100%",
@@ -727,11 +751,7 @@ export default function DispatchPage() {
                     : "#111827",
                 color: "white",
                 fontSize: "17px",
-                fontWeight: 700,
-                cursor:
-                  cameraRunning
-                    ? "default"
-                    : "pointer"
+                fontWeight: 700
               }}
             >
               {cameraRunning
@@ -744,7 +764,7 @@ export default function DispatchPage() {
         )}
 
 
-        {/* PRODUCT / QUANTITY */}
+        {/* AFTER BARCODE IS SCANNED */}
 
         {barcode && (
 
@@ -758,198 +778,193 @@ export default function DispatchPage() {
             }}
           >
 
-            {loadingProduct ? (
+            {/* PRODUCT */}
+
+            <div
+              style={{
+                marginBottom: "18px"
+              }}
+            >
 
               <div
                 style={{
-                  padding: "20px 0",
-                  textAlign: "center",
-                  fontSize: "18px"
+                  fontSize: "13px",
+                  color: "#6b7280",
+                  marginBottom: "5px"
                 }}
               >
-                Loading product...
+                PRODUCT
               </div>
 
-            ) : (
+              <div
+                style={{
+                  fontSize: "24px",
+                  fontWeight: 800,
+                  color: "#111827"
+                }}
+              >
+                {product ||
+                  "Loading product..."}
+              </div>
 
-              <>
-
-                <div
-                  style={{
-                    marginBottom: "18px"
-                  }}
-                >
-
-                  <div
-                    style={{
-                      fontSize: "13px",
-                      color: "#6b7280",
-                      marginBottom: "5px"
-                    }}
-                  >
-                    PRODUCT
-                  </div>
-
-                  <div
-                    style={{
-                      fontSize: "24px",
-                      fontWeight: 800,
-                      color: "#111827"
-                    }}
-                  >
-                    {product}
-                  </div>
-
-                </div>
+            </div>
 
 
-                <div
-                  style={{
-                    background: "#f3f4f6",
-                    borderRadius: "10px",
-                    padding: "13px",
-                    marginBottom: "18px"
-                  }}
-                >
+            {/* STOCK */}
 
-                  <div
-                    style={{
-                      fontSize: "13px",
-                      color: "#6b7280"
-                    }}
-                  >
-                    CURRENT STOCK
-                  </div>
+            <div
+              style={{
+                background: "#f3f4f6",
+                borderRadius: "10px",
+                padding: "13px",
+                marginBottom: "18px"
+              }}
+            >
 
-                  <div
-                    style={{
-                      fontSize: "25px",
-                      fontWeight: 800,
-                      marginTop: "3px",
-                      color: "#111827"
-                    }}
-                  >
-                    {stock ?? "..."} cases
-                  </div>
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: "#6b7280"
+                }}
+              >
+                CURRENT STOCK
+              </div>
 
-                </div>
+              <div
+                style={{
+                  fontSize: "25px",
+                  fontWeight: 800,
+                  marginTop: "3px",
+                  color: "#111827"
+                }}
+              >
+                {stockLoading
+                  ? "Checking..."
+                  : `${stock ?? 0} cases`}
+              </div>
 
-
-                <label
-                  htmlFor="quantity"
-                  style={{
-                    display: "block",
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    color: "#111827",
-                    marginBottom: "7px"
-                  }}
-                >
-                  Number of cases to dispatch
-                </label>
+            </div>
 
 
-                <input
-                  ref={quantityRef}
-                  id="quantity"
-                  type="number"
-                  inputMode="numeric"
-                  min="1"
-                  step="1"
-                  value={quantity}
-                  onChange={(e) =>
-                    setQuantity(e.target.value)
-                  }
-                  onKeyDown={(e) => {
+            {/* QUANTITY */}
 
-                    if (
-                      e.key === "Enter" &&
-                      !dispatching
-                    ) {
-
-                      confirmDispatch();
-
-                    }
-
-                  }}
-                  placeholder="e.g. 48"
-                  disabled={dispatching}
-                  autoComplete="off"
-                  style={{
-                    width: "100%",
-                    boxSizing: "border-box",
-                    padding: "17px",
-                    border:
-                      "2px solid #d1d5db",
-                    borderRadius: "10px",
-                    fontSize: "22px",
-                    color: "#111827",
-                    outline: "none",
-                    marginBottom: "12px"
-                  }}
-                />
+            <label
+              htmlFor="quantity"
+              style={{
+                display: "block",
+                fontSize: "15px",
+                fontWeight: 700,
+                color: "#111827",
+                marginBottom: "7px"
+              }}
+            >
+              Number of cases to dispatch
+            </label>
 
 
-                <button
-                  type="button"
-                  onClick={confirmDispatch}
-                  disabled={
-                    !quantity ||
-                    dispatching
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "16px",
-                    border: "none",
-                    borderRadius: "10px",
-                    background:
-                      !quantity ||
-                      dispatching
-                        ? "#9ca3af"
-                        : "#16a34a",
-                    color: "white",
-                    fontSize: "18px",
-                    fontWeight: 800,
-                    cursor:
-                      !quantity ||
-                      dispatching
-                        ? "default"
-                        : "pointer"
-                  }}
-                >
-                  {dispatching
-                    ? "Processing..."
-                    : "Confirm Dispatch"}
-                </button>
+            <input
+              ref={quantityRef}
+              id="quantity"
+              type="number"
+              inputMode="numeric"
+              min="1"
+              step="1"
+              value={quantity}
+              onChange={(e) =>
+                setQuantity(
+                  e.target.value
+                )
+              }
+              onKeyDown={(e) => {
+
+                if (
+                  e.key === "Enter" &&
+                  !dispatching
+                ) {
+
+                  confirmDispatch();
+
+                }
+
+              }}
+              placeholder="e.g. 48"
+              disabled={
+                dispatching ||
+                !product
+              }
+              autoComplete="off"
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                padding: "17px",
+                border:
+                  "2px solid #d1d5db",
+                borderRadius: "10px",
+                fontSize: "22px",
+                color: "#111827",
+                outline: "none",
+                marginBottom: "12px"
+              }}
+            />
 
 
-                <button
-                  type="button"
-                  onClick={dispatchAnother}
-                  disabled={dispatching}
-                  style={{
-                    width: "100%",
-                    padding: "14px",
-                    marginTop: "10px",
-                    border:
-                      "1px solid #d1d5db",
-                    borderRadius: "10px",
-                    background: "white",
-                    color: "#111827",
-                    fontSize: "16px",
-                    fontWeight: 700,
-                    cursor:
-                      dispatching
-                        ? "default"
-                        : "pointer"
-                  }}
-                >
-                  Dispatch Another Product
-                </button>
+            {/* CONFIRM */}
 
-              </>
+            <button
+              type="button"
+              onClick={confirmDispatch}
+              disabled={
+                !quantity ||
+                !product ||
+                stockLoading ||
+                dispatching
+              }
+              style={{
+                width: "100%",
+                padding: "16px",
+                border: "none",
+                borderRadius: "10px",
+                background:
+                  !quantity ||
+                  !product ||
+                  stockLoading ||
+                  dispatching
+                    ? "#9ca3af"
+                    : "#16a34a",
+                color: "white",
+                fontSize: "18px",
+                fontWeight: 800
+              }}
+            >
+              {dispatching
+                ? "Processing..."
+                : "Confirm Dispatch"}
+            </button>
 
-            )}
+
+            {/* ANOTHER */}
+
+            <button
+              type="button"
+              onClick={
+                dispatchAnother
+              }
+              disabled={dispatching}
+              style={{
+                width: "100%",
+                padding: "14px",
+                marginTop: "10px",
+                border:
+                  "1px solid #d1d5db",
+                borderRadius: "10px",
+                background: "white",
+                color: "#111827",
+                fontSize: "16px",
+                fontWeight: 700
+              }}
+            >
+              Dispatch Another Product
+            </button>
 
           </section>
 
@@ -991,5 +1006,4 @@ export default function DispatchPage() {
     </main>
 
   );
-
 }
