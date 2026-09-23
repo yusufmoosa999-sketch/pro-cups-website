@@ -13,7 +13,7 @@ const ROI = {
   left: 0.08,
   top: 0.34,
   width: 0.84,
-  height: 0.32,
+  height: 0.45,
 };
 
 export default function ProductionScannerPage() {
@@ -483,7 +483,7 @@ export default function ProductionScannerPage() {
                     left: "8%",
                     top: "34%",
                     width: "84%",
-                    height: "32%",
+                    height: "45%",
                   }}
                 />
               </>

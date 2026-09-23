@@ -30,7 +30,7 @@ const ROI = {
   left: 0.08,
   top: 0.34,
   width: 0.84,
-  height: 0.32,
+  height: 0.45,
 };
 
 export default function DispatchPage() {
@@ -568,7 +568,7 @@ export default function DispatchPage() {
                       left: "8%",
                       top: "34%",
                       width: "84%",
-                      height: "32%",
+                      height: "45%",
                       border: "3px solid #22c55e",
                       borderRadius: "8px",
                       pointerEvents: "none",
