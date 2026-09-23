@@ -463,26 +463,18 @@ export default function DispatchPage() {
     // Do not make the worker wait for Google Sheets. The backend still performs
     // the real stock deduction and records the movement; this callback only
     // reports a failure if the background request is rejected.
+    // Fire the request in the background. The worker-facing screen must not
+    // change to an error if the browser misses the JSONP callback after the
+    // backend has already accepted and processed the dispatch.
     callStockApi(dispatchedBarcode, cases, requestId)
-      .then((result) => {
-        // If the user is still on the page, keep the last known backend result
-        // available without blocking the next dispatch.
-        if (result?.ok && typeof result.stock === "number") {
-          setStatus(
-            `✓ ${result.name} — ${cases} case${
-              cases === 1 ? "" : "s"
-            } dispatched`,
-            "success"
-          );
-        }
+      .then(() => {
+        // Keep the success message shown to the worker.
       })
       .catch((error) => {
-        setStatus(
-          error instanceof Error
-            ? `Dispatch sent, but confirmation failed: ${error.message}`
-            : "Dispatch sent, but confirmation failed.",
-          "error"
-        );
+        // Do not overwrite the successful dispatch message. The backend uses
+        // requestId idempotency, so a request that already reached Google Apps
+        // Script cannot be deducted twice with the same requestId.
+        console.warn("Background dispatch confirmation:", error);
       });
   }
 
