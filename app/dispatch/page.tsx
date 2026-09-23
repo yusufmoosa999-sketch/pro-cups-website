@@ -429,45 +429,61 @@ export default function DispatchPage() {
     processingRef.current = true;
     setDispatching(true);
 
-    setStatus(
-      `Dispatching ${cases} case${cases === 1 ? "" : "s"}...`
-    );
-
     const requestId =
       typeof crypto !== "undefined" &&
       typeof crypto.randomUUID === "function"
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random()}`;
 
-    try {
-      const result = await callStockApi(
-        barcode,
-        cases,
-        requestId
-      );
+    // Make the worker interface immediate. The dispatch is sent to Google
+    // Apps Script in the background, while the screen is reset straight away.
+    // The requestId prevents the backend from recording the same dispatch twice.
+    const dispatchedProduct = product;
+    const dispatchedBarcode = barcode;
 
-      setStock(result.stock);
+    const newOptimisticStock =
+      stock !== null ? Math.max(0, stock - cases) : null;
 
-      setStatus(
-        `✓ ${result.name} — ${cases} case${
-          cases === 1 ? "" : "s"
-        } dispatched`,
-        "success"
-      );
+    setStock(newOptimisticStock);
+    setStatus(
+      `✓ ${dispatchedProduct} — ${cases} case${
+        cases === 1 ? "" : "s"
+      } dispatched`,
+      "success"
+    );
 
-      setBarcode("");
-      setProduct("");
-      setQuantity("");
-      setStock(null);
-    } catch (error) {
-      setStatus(
-        error instanceof Error ? error.message : "Dispatch failed.",
-        "error"
-      );
-    } finally {
-      setDispatching(false);
-      processingRef.current = false;
-    }
+    // Clear the screen immediately so the worker can move to the next pallet.
+    setBarcode("");
+    setProduct("");
+    setQuantity("");
+    setStock(null);
+    setDispatching(false);
+    processingRef.current = false;
+
+    // Do not make the worker wait for Google Sheets. The backend still performs
+    // the real stock deduction and records the movement; this callback only
+    // reports a failure if the background request is rejected.
+    callStockApi(dispatchedBarcode, cases, requestId)
+      .then((result) => {
+        // If the user is still on the page, keep the last known backend result
+        // available without blocking the next dispatch.
+        if (result?.ok && typeof result.stock === "number") {
+          setStatus(
+            `✓ ${result.name} — ${cases} case${
+              cases === 1 ? "" : "s"
+            } dispatched`,
+            "success"
+          );
+        }
+      })
+      .catch((error) => {
+        setStatus(
+          error instanceof Error
+            ? `Dispatch sent, but confirmation failed: ${error.message}`
+            : "Dispatch sent, but confirmation failed.",
+          "error"
+        );
+      });
   }
 
   function dispatchAnother() {
